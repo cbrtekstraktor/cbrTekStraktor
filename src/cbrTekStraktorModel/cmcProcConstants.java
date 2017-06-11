@@ -5,16 +5,19 @@ import java.awt.Color;
 public class cmcProcConstants {
 	
 	public static String Application = "cbrTekStraktor";
-	public static String Version = "V0.1";
-	public static String Build = "02-June-2017";
-		
+	public static String Version = "V0.2";
+	public static String Build = "12-June-2017";
+	public static long   ExportFormatVersion = 20170601;    // used to detect incompatible export files
+	
 	public static int   QUICKEDITBORDER = 18;
     public static Color DEFAULT_LIGHT_GRAY = javax.swing.UIManager.getDefaults().getColor("Button.background");
     public static int   MINIMAL_DPI = 70;  // a lot of scans are 72
     public static int   MAXIMAL_DPI = 300; // Tesseract works fine at 300
 	
-    public static String LINUX_TESSERACTHOME = "/opt/tesseract";
+    public static String LINUX_TESSERACTHOME = "/usr/bin";
     public static String MSDOS_TESSERACTHOME = "C:\\temp\\Tesseract-OCR-4\\Tesseract-OCR";
+    
+    public static int MAX_TRANSLATED_LINES = 150;
 	
     public static int ZWART  = 0xff000000;
     public static int WIT    = 0xffffffff;

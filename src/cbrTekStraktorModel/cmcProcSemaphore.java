@@ -11,7 +11,8 @@ public class cmcProcSemaphore {
 		                  PROCESS_MAINFRAME, PROCESS_BLUEPRINT ,
 		                  PROCESS_CONVOLUTION_GAUSSIAN, PROCESS_CONVOLUTION_GLOW , PROCESS_CONVOLUTION_SHARPEN , 
 		                  PROCESS_CONVOLUTION_EDGE ,
-		                  PREPARE_OCR , SHOW_OCR_FILE , RUN_TESSERACT }
+		                  PREPARE_OCR , SHOW_OCR_FILE , RUN_TESSERACT ,
+		                  EXTRACT_ALL_TEXT , IMPORT_ALL_TEXT }
 	
 	TaskType sema = TaskType.DO_NOTHING;
 	

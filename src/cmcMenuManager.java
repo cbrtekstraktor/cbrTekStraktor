@@ -32,6 +32,16 @@ public class cmcMenuManager {
 		fileMenu.setFont(xfont);
 		fileMenu.setOpaque(true);
 		//
+		JMenu importMenu = new JMenu("Import");
+		importMenu.setPreferredSize(new Dimension(Breedte,menuBar.getHeight()));
+		importMenu.setFont(xfont);
+		importMenu.setOpaque(true);
+		//
+		JMenu exportMenu = new JMenu("Export");
+		exportMenu.setPreferredSize(new Dimension(Breedte,menuBar.getHeight()));
+		exportMenu.setFont(xfont);
+		exportMenu.setOpaque(true);
+		//
 		JMenu toolsMenu = new JMenu("Tools");
 		toolsMenu.setPreferredSize(new Dimension(Breedte,menuBar.getHeight()));
 		toolsMenu.setFont(xfont);
@@ -75,6 +85,24 @@ public class cmcMenuManager {
 			String sText = cbrTekStraktorModel.cmcProcEnums.MENU_ITEMS.values()[i].toString();
 			if( sText.startsWith("DIV") ) {
 				current.add(new JSeparator());
+				continue;
+			}
+			if( sText.compareToIgnoreCase("IMPORT")==0 ) {
+				current.add(importMenu);
+				current = importMenu;
+				continue;
+			}
+			if( sText.compareToIgnoreCase("IMPORT_CONT")==0 ) {
+				current = fileMenu;
+				continue;
+			}
+			if( sText.compareToIgnoreCase("EXPORT")==0 ) {
+				current.add(exportMenu);
+				current = exportMenu;
+				continue;
+			}
+			if( sText.compareToIgnoreCase("EXPORT_CONT")==0 ) {
+				current = fileMenu;
 				continue;
 			}
 			if( sText.startsWith("TOOLS") ) {
@@ -186,6 +214,8 @@ public class cmcMenuManager {
 		case QUICK_EDIT    : { memShared.performCallback("doQuickEdit"); break; }
 		case DETAILED_EDIT : { memShared.performCallback("doDetailedEdit"); break; }
 		case TESSERACT_OPTIONS  : { memShared.performCallback("doTesseractOptionDialog"); break; }
+		case IMPORT_TEXT   : { memShared.performCallback("doImportText"); break; }
+		case EXPORT_TEXT   : { memShared.performCallback("doExportText"); break; }
 		//
 		case RECENT1 : { memShared.performCallback("doRecent","0"); break; }
 		case RECENT2 : { memShared.performCallback("doRecent","1"); break; }
@@ -319,7 +349,10 @@ public class cmcMenuManager {
 			setMenuItemStatus( cbrTekStraktorModel.cmcProcEnums.MENU_ITEMS.MONITOR , true );
 			setMenuItemStatus( cbrTekStraktorModel.cmcProcEnums.MENU_ITEMS.ARCHIVE_VIEWER , true );
 			setMenuItemStatus( cbrTekStraktorModel.cmcProcEnums.MENU_ITEMS.ARCHIVE_BROWSER , true );
-					
+		    //
+			setMenuItemStatus( cbrTekStraktorModel.cmcProcEnums.MENU_ITEMS.IMPORT_TEXT , true );
+			setMenuItemStatus( cbrTekStraktorModel.cmcProcEnums.MENU_ITEMS.EXPORT_TEXT , true );
+
 			return;
 		}
 	    //	in flux modi

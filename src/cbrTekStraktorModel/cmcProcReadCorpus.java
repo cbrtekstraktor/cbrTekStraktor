@@ -105,6 +105,11 @@ public class cmcProcReadCorpus {
 	private boolean extractStatFiles()
 	// ---------------------------------------------------------------------------------
 	{
+		cmcArchiveDAO xao = new cmcArchiveDAO(xMSet,logger);
+        xao.extractAllStatFiles(CorpusStatDir);
+        xao = null;
+		return true;
+		/*
 		xMSet.purgeDirByName( xMSet.getTempDir() , true );
 		cmcArchiveDAO xao = new cmcArchiveDAO(xMSet,logger);
 		String ArcDir = xMSet.getArchiveDir();
@@ -136,6 +141,7 @@ public class cmcProcReadCorpus {
 		}		
 		xao=null;
 		return true;
+		*/
 	}
 	
 	// ---------------------------------------------------------------------------------

@@ -1,9 +1,10 @@
 package textProcessing;
 
+import cbrTekStraktorModel.cmcProcConstants;
 import cbrTekStraktorModel.cmcProcEnums;
 
 public class cmcTextObject {
-      private int MAX_TRANS = 150;
+      //private int MAX_TRANS = 150;
 	
 	  public int BundelIdx;
 	  public long UID;
@@ -22,7 +23,7 @@ public class cmcTextObject {
 		  removed=false;
 		  TextOCR="";
 		  TextFrom="";
-		  TextTranslated= new String[MAX_TRANS];
+		  TextTranslated= new String[cmcProcConstants.MAX_TRANSLATED_LINES];
 		  changeDate=-1L;
 		  hasChanged=false;
 		  for(int i=0;i<TextTranslated.length;i++) TextTranslated[i]="";

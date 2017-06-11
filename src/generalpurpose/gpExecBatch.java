@@ -1,5 +1,6 @@
 package generalpurpose;
 
+
 import java.io.*;
 import java.util.ArrayList;
 import java.util.concurrent.Callable;
@@ -16,6 +17,9 @@ public class gpExecBatch {
 	int BatTeller=0;
 	logLiason logger = null;
 	int exitlevel=-1;
+	ArrayList<String> stdout = null;
+	ArrayList<String> stderr = null;
+
 	//
     //------------------------------------------------------------
     private void do_log(int logLevel , String sIn)
@@ -39,10 +43,10 @@ public class gpExecBatch {
     {
     	logger = iL;
     	//
-    	ArrayList<String> stdout  = new ArrayList<String>();
-    	ArrayList<String> stderr = new ArrayList<String>();
+    	stdout  = new ArrayList<String>();
+    	stderr = new ArrayList<String>();
     	//
-    	exitlevel = executeCommandWithExecutors(inBatchFile,true,true,100000,stdout,stderr);
+    	exitlevel = executeCommandWithExecutors(inBatchFile,true,true,100000);
     	if( exitlevel == 0 ) {
     	  exitlevel = getNbrOfTesseractErrors(stderr);
     	}
@@ -56,21 +60,27 @@ public class gpExecBatch {
     }
     //
 	//---------------------------------------------------------------------------------
-    private int executeCommandWithExecutors(       String inBatchFile,
-                                                  final boolean printOutput,
-                                                  final boolean printError,
-                                                  final long timeOut,
-                                                  ArrayList<String> stdout,
-                                                  ArrayList<String> stderr)
+    private int executeCommandWithExecutors( String inBatchFile,
+                                             final boolean printOutput,
+                                             final boolean printError,
+                                             final long timeOut )
+                                             //ArrayList<String> stdout,
+                                             //ArrayList<String> stderr)
     //---------------------------------------------------------------------------------
     {
     	 String command = "noppes";
     	 BatTeller++;
-    	
-    	
-    	 String massagedCommand = "cmd.exe /C " + inBatchFile;
-    	 do_log(5,"running -" + massagedCommand );
-    	 
+
+    	 // 05 June : Massage the MSDOS - Unix command 
+    	 String massagedCommand = null;
+    	 if ( System.getProperty("file.separator").toCharArray()[0] == '/' ) {
+ 			massagedCommand = "/bin/sh " + inBatchFile;
+ 	     }
+    	 else {
+    	    massagedCommand = "cmd.exe /C " + inBatchFile;
+    	 }
+    	 do_log(5,"Running command [" + massagedCommand  + "]");
+         // 	 
          try
          {
             // create the process which will run the command
@@ -82,7 +92,6 @@ public class gpExecBatch {
             gpStreamGobbler errorGobbler  = new gpStreamGobbler(logger, process.getErrorStream(), "ERROR" , printError, stderr,process);
             outputGobbler.start();
             errorGobbler.start();
-
             
             // create a Callable for the command's Process which can be called by an Executor 
             Callable<Integer> call = new Callable<Integer>()
@@ -115,12 +124,7 @@ public class gpExecBatch {
                 throw new RuntimeException(errorMessage, ex);
             }
             finally {
-            	/*
-            	if( this.IsBestand(FNaam) ) {
-            		this.VerwijderBestand(FNaam);
-            		logit("Removed " + FNaam);
-            	}
-            	*/
+            	// no action
             }
         }
         catch (InterruptedException ex)
@@ -138,8 +142,9 @@ public class gpExecBatch {
    
     }
     
-    
+    //---------------------------------------------------------------------------------
     private int getNbrOfTesseractErrors(ArrayList<String> stderr)
+    //---------------------------------------------------------------------------------
     {
     	int nerrs=0;
     	for(int i=0;i<stderr.size();i++)
@@ -151,5 +156,17 @@ public class gpExecBatch {
     	}
     	return nerrs;
     }
-   
+    //---------------------------------------------------------------------------------
+    public ArrayList<String> getSTDOUT()
+    //---------------------------------------------------------------------------------
+    {
+    	return stdout;
+    }
+    //---------------------------------------------------------------------------------
+    public ArrayList<String> getSTDERR()
+    //---------------------------------------------------------------------------------
+    {
+    	return stderr;
+    }
+
 }

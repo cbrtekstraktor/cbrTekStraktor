@@ -23,6 +23,10 @@ public class cmcTextDAO {
     private String DEFAULTLANG = "English";
     private String OriginalLanguage=DEFAULTLANG;
     private String[] langList=null;
+    private String currImageFileName=null;
+    private String currImagePath=null;
+    private String currImageCMXUID=null;
+    private String currImageUID=null;
 
 	//------------------------------------------------------------
     private void do_log(int logLevel , String sIn)
@@ -179,11 +183,27 @@ public class cmcTextDAO {
 			do_error("Cannot locate [" + XmlFLong + "]");
 			return null;
 		}
+		return readTextObjectsFromFile(XmlFLong);
+	}
+	
+	//-----------------------------------------------------------------------
+	public cmcTextObject[] readTextObjectsFromFile(String FName)
+	//-----------------------------------------------------------------------
+	{
+		if( xMSet.xU.IsBestand(FName) == false ) {
+			do_error("Cannot locate [" + FName + "]");
+			return null;
+		}
+		String XmlFLong = FName;
 		//
 		if ( !initLanguages() ) return null;
 		// What is the idx of textfrom
 		int tix = 0;
 		//
+		currImageFileName=null;
+		currImagePath=null;
+		currImageUID=null;
+		currImageCMXUID=null;
 	  	cmcTextObject[] ar_tmp = null;
 	    try {
 			File inFile  = new File(XmlFLong);  // File to read from.
@@ -194,6 +214,30 @@ public class cmcTextDAO {
 	       	String sLijn=null;
           	while ((sLijn=reader.readLine()) != null) {
 		      if( sLijn.indexOf("<TextBundle>") >= 0 ) aantal++;
+		      
+		      // global variables
+		      String sVal=null;
+		      if( sLijn.indexOf("<FileName>") >= 0 ) {
+				sVal = xMSet.xU.extractXMLValue(sLijn,"FileName");
+				currImageFileName = sVal.trim();
+				continue;	 
+			  }
+		      if( sLijn.indexOf("<FilePath>") >= 0 ) {
+				sVal = xMSet.xU.extractXMLValue(sLijn,"FilePath");
+				currImagePath=sVal.trim();
+				continue;	 
+			  }
+		      if( sLijn.indexOf("<CMXUID>") >= 0 ) {
+					sVal = xMSet.xU.extractXMLValue(sLijn,"CMXUID");
+					currImageCMXUID=sVal.trim();
+					continue;	 
+			  }
+		      if( sLijn.indexOf("<UID>") >= 0 ) {
+					sVal = xMSet.xU.extractXMLValue(sLijn,"UID");
+					currImageUID=sVal.trim();
+					continue;	 
+			  }
+		      
 		   	}
 	       	reader.close();
 	       	// 2nd pass
@@ -390,7 +434,7 @@ public class cmcTextDAO {
 	    langList = xMSet.getLanguageList();
 	    cmcTextObject x = new cmcTextObject();
 	    if( langList.length > x.TextTranslated.length ) {
-	      do_error("There are more language than cmcTextObject.TextTranslated can hold.");	
+	      do_error("There are more languages than cmcTextObject.TextTranslated can hold.");	
 	    }
 	    //
 	    return true;
@@ -452,4 +496,24 @@ public class cmcTextDAO {
 		return OriginalLanguage;
 	}
 	
+	public String getUID()
+	{
+		return currImageUID;
+	}
+	public String getCMXUID()
+	{
+		return currImageCMXUID;
+	}
+	public String getImageFileName()
+	{
+		return currImageFileName;
+	}
+	public String getImagePath()
+	{
+		return currImagePath;
+	}
+	public String[] getLanguagList()
+	{
+		return langList;
+	}
 }

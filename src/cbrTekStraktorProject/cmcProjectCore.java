@@ -12,7 +12,7 @@ public class cmcProjectCore {
 	private String ProjectFolderName =  null;
 	private String ProjectName =  null;
 	private String TesseractDir = null;
-	private cmcProcEnums.ENCODING encoding = cmcProcEnums.ENCODING.UTF_8;
+	private cmcProcEnums.ENCODING encoding = cmcProcEnums.ENCODING.ISO_8859_1;
 	private String Description = null;
 	private String dateformat="dd-MMM-yy HH:mm:ss";
 	private int mean_character_count = 500;

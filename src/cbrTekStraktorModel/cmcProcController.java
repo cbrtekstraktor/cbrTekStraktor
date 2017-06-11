@@ -20,6 +20,8 @@ import drawing.cmcGraphController;
 import javax.swing.SwingWorker;
 
 import ocr.cmcOCRController;
+import textProcessing.cmcTextExport;
+import textProcessing.cmcTextImport;
 import logger.logLiason;
 
 
@@ -282,6 +284,19 @@ public class cmcProcController extends SwingWorker<Integer, Integer> {
             	}
             	taskTipe = cmcProcSemaphore.TaskType.DO_NOTHING; 
                 break; }
+            case EXTRACT_ALL_TEXT : {
+            	extract_all_text();
+            	cSema.setSemaphore(taskTipe); 
+            	taskTipe = cmcProcSemaphore.TaskType.DO_NOTHING; 
+                break;
+                }
+            case IMPORT_ALL_TEXT : {
+            	import_all_text();
+            	cSema.setSemaphore(taskTipe); 
+            	taskTipe = cmcProcSemaphore.TaskType.DO_NOTHING; 
+                break;
+                }
+
             case DO_NOTHING : break;
             default : { do_error("Unknown semaphore state [" + taskTipe  + "]"); break; }
             }
@@ -952,5 +967,23 @@ public class cmcProcController extends SwingWorker<Integer, Integer> {
 		 cmeta = null;
 		 //
 		 return true;
+	}
+
+	//-----------------------------------------------------------------------
+	private void extract_all_text()
+	//-----------------------------------------------------------------------
+	{
+		cmcTextExport teex = new cmcTextExport(xMSet,logger);
+		teex.exportAllText();
+		teex=null;
+	}
+
+	//-----------------------------------------------------------------------
+	private void import_all_text()
+	//-----------------------------------------------------------------------
+	{
+		cmcTextImport teim = new cmcTextImport(xMSet,logger);
+		teim.importAllText();
+		teim=null;
 	}
 }

@@ -1,5 +1,8 @@
 package bubbleProcessing;
 
+/*
+ * This is an experimental class - currently not used 
+ */
 import generalImagePurpose.cmcImageRoutines;
 
 import java.awt.Point;

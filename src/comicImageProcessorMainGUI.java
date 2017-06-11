@@ -52,14 +52,13 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.ChangeEvent;
 import javax.swing.JCheckBox;
 
-import bubbleProcessing.cmcBubbleMaker;
 
 import java.awt.event.ItemListener;
 import java.awt.event.ItemEvent;
 
 import logger.logLiason;
 import logger.nioServerDaemon;
-import cbrTekStraktorModel.cmcMonitorItem;
+import monitor.cmcMonitorController;
 import cbrTekStraktorModel.cmcProcConstants;
 import cbrTekStraktorModel.cmcProcController;
 import cbrTekStraktorModel.cmcProcEnums;
@@ -77,6 +76,7 @@ import generalpurpose.gpInterrupt;
 import generalpurpose.gpUnZipFileList;
 import imageProcessing.cmcProcColorHistogram;
 
+import bubbleProcessing.cmcBubbleMaker;
 
 
 
@@ -149,7 +149,7 @@ public class comicImageProcessorMainGUI {
     static logLiason logger=null;
     static logLiason logger2nd = null;
     static nioServerDaemon logDaemon=null;
-    static cmcMonitorDialog monitorHandle=null;
+    static cmcMonitorController moniControl=null;
     //
     static gpMakeScreenShot srsh = null;  // screenshot component
     private long mousedowntimer = 0L;
@@ -167,9 +167,7 @@ public class comicImageProcessorMainGUI {
     static Color CORNFLOWER = new Color(100, 149, 237);
     static Color BUTTONHOVER = new Color(176, 196, 222);  
     static String BulkFileName = null;
-    static long monitorTimer = -1L;
-    static long keepMonitorVisibleAfterCompletion = 10000L;  // 10 sec
- 	       
+           
     // purge item
     class PurgeItem {
     	String Fname=null;
@@ -251,7 +249,8 @@ public class comicImageProcessorMainGUI {
 					//
 					comicImageProcessorMainGUI window = new comicImageProcessorMainGUI();
 					window.frame.setVisible(true);
-					
+					//
+					moniControl = new cmcMonitorController(xMSet,logger);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -924,7 +923,7 @@ public class comicImageProcessorMainGUI {
 			    			 do_log(5,"No more items on scanlist");
 			    			 scanCheckBox.setSelected(false);
 			    			 scanMode = false;
-			    			 monitorTimer = System.currentTimeMillis();
+			    			 if( moniControl != null ) moniControl.requestDelayedClose();
 			    		 }
 			    		
 			    	 } // else negeer
@@ -987,6 +986,8 @@ public class comicImageProcessorMainGUI {
 					                                 imgPanel.repaint();
 					                                 break; }
 			     		 //case PREPARE_OCR : break;
+			     		 case EXTRACT_ALL_TEXT : { doEndOfTextExport(); break; }
+			     		 case IMPORT_ALL_TEXT  : { do_error("einde import"); break; }
 			     		 default : { do_error("Wrong status in NON robot mode [" + sema + "]"); break; }
 			     		 }
 			     	     	 
@@ -1018,13 +1019,6 @@ public class comicImageProcessorMainGUI {
 			     if( (tenSeconds % 5)==0) {
 			    	 String sPat = ((tenSeconds % 10)==0) ? "HH:mm" : "HH mm";
 			    	 klok.setText(xMSet.xU.prntDateTime(System.currentTimeMillis(),sPat));
-			     }
-			     // monitorTimer
-			     if( monitorTimer > 0L) {
-			    	 if( (System.currentTimeMillis() - monitorTimer) > keepMonitorVisibleAfterCompletion ) {
-			    		 monitorTimer=-1L;
-			    		 closeMonitor();
-			    	 }
 			     }
 			     // knoppen
 			     if( appState != prevAppState ) {
@@ -1664,7 +1658,7 @@ public class comicImageProcessorMainGUI {
 			  scanMode=true;
 			  runCompleted=true; // triggert de start
 			  //
-			  startMonitor();
+			  startMonitor(sDir);
 			}
 		}
 		// Piecemeal extractor
@@ -1980,7 +1974,7 @@ public class comicImageProcessorMainGUI {
 	    		  break; 
 	    		  }
 	    		 case CHROME : {
-	    		  clientProcess = rt.exec(new String[] {"/Program Files (x86)/Google/Chrome/Application/chrome.exe",reportURL});
+	    		    clientProcess = rt.exec(new String[] { System.getProperty("user.home") + "\\AppData\\Local\\Google\\Chrome\\Application\\chrome.exe",reportURL});
 	    		  break;    
 	    		  }
 	    		 default : {
@@ -1994,8 +1988,8 @@ public class comicImageProcessorMainGUI {
 	    		 switch (xMSet.getBrowser() )
 	    		 {
 	    		 case MOZILLA : {
-	    		  //clientProcess = rt.exec(new String[] {"C:\\Program Files (x86)\\Mozilla Firefox\\firefox.exe","-new-window", reportURL });
-	    	      //break;
+	    		  clientProcess = rt.exec(new String[] {"/usr/bin/firefox","-new-window", reportURL });
+	    	      break;
 	    		  }
 	    		 case EXPLORER : {
 	    		  //clientProcess = rt.exec(new String[] {"C:\\Program Files\\Internet Explorer\\iexplore.exe",reportURL});
@@ -2526,7 +2520,7 @@ public class comicImageProcessorMainGUI {
 				 scanMode=true;
 				 runCompleted=true; // triggert de start
 				 //
-				 this.startMonitor();
+				 this.startMonitor(sDir);
 			}
 			return;
 		}
@@ -2922,52 +2916,28 @@ public class comicImageProcessorMainGUI {
 	}
 
 	//-----------------------------------------------------------------------
-	private void startMonitor()
+	private void startMonitor(String FolderName)
 	//-----------------------------------------------------------------------
 	{
-		monitorTimer=-1L;
-		monitorHandle = new cmcMonitorDialog( frame , xMSet , logger);
-		syncMonitor();
+		if( moniControl !=null ) moniControl.startMonitor(FolderName);
 	}
 	//-----------------------------------------------------------------------
 	private void syncMonitorEnd()
 	//-----------------------------------------------------------------------
 	{
-		if( BulkFileName == null ) return;
-		if( xMSet.setEndTimeOnScanList(BulkFileName) ) syncMonitor();
+		if( moniControl !=null ) moniControl.syncMonitorEnd(BulkFileName);
 	}
 	//-----------------------------------------------------------------------
 	private void syncMonitor()
 	//-----------------------------------------------------------------------
 	{
-		ArrayList<cmcMonitorItem> pl = xMSet.getMonitorList();
-	    try {
-		  if( monitorHandle == null ) return;
-		  if( monitorHandle.hasBeenClosed() ) return;
-		  for(int i= 0;i<pl.size();i++) monitorHandle.upsertMonitorItemLine(pl.get(i));
-		  monitorHandle.endTransmissionAndGetFinal();
-		}
-		catch(Exception e ) {
-			do_error("Cannot upsert to monitor [" + e.getMessage() );
-		}
+		if( moniControl !=null ) moniControl.syncMonitor();
 	}
-	//-----------------------------------------------------------------------
-    private void closeMonitor()
-	//-----------------------------------------------------------------------
-    {
-    	try {
-  		  if( monitorHandle == null ) return;
-  		  monitorHandle.forceClose();
-  		}
-  		catch(Exception e ) {
-  			do_error("Cannot cloe monitor [" + e.getMessage() );
-  		}
-    }
 	//-----------------------------------------------------------------------
     public void doClickMonitor()
 	//-----------------------------------------------------------------------
     {
-       startMonitor();
+       startMonitor(null);
     }
 	//-----------------------------------------------------------------------
     private void doClickArchiveDialog(boolean enableZap)
@@ -3073,11 +3043,104 @@ public class comicImageProcessorMainGUI {
     {
     	openFileInBrowser(FileName);
     }
+	//-----------------------------------------------------------------------
+    private void doExportText()
+	//-----------------------------------------------------------------------
+    {
+    	// Stop file
+   		this.resetInterrupt();
+   		//
+   		cmcProcFileChooser fc = new cmcProcFileChooser(xMSet.getRootDir(),true);
+    	String sDir = fc.getAbsoluteFilePath();
+    	if( sDir ==  null ) sDir = "No folder specified";
+    	if( xMSet.xU.IsDir(sDir) == false ) {
+    		popMessage("[" + sDir + "] is not a valid folder");
+    		return;
+    	}
+    	xMSet.createOCRScanList(sDir);
+    	int aantal = xMSet.getScanListSize();
+    	if( aantal <= 0 ) {
+    		this.scanCheckBox.setSelected(false);
+    		popMessage("There are no valid archive files present in folder [" + sDir + "]");
+    	}
+    	else {
+    	 // remove target file
+    	 if( xMSet.xU.IsBestand(xMSet.getTextReportName()) ) {
+    		 xMSet.xU.VerwijderBestand(xMSet.getTextReportName());
+    	 }
+		 requestTask( cmcProcSemaphore.TaskType.EXTRACT_ALL_TEXT );
+		 robotMode=false;
+		 runCompleted=true; // triggert de start
+		}
+		return;
+    }
     
-    // experimtental
+    private void doEndOfTextExport()
+    {
+   	    if( xMSet.xU.IsBestand(xMSet.getTextReportName())==false ) {
+   	    	do_error("Report export file not found [" + xMSet.getTextReportName() + "]");
+   	    	return;
+   	    }
+   	    try {
+    	  cmcProcFileChooser fc = new cmcProcFileChooser(xMSet.getRecentSaveDir(),false);
+		  String FName = fc.getAbsoluteFilePath();
+		  if( FName == null ) return;
+		  // if no suffix add txt
+		  if ( FName.indexOf(".") < 0 ) {
+			  FName = FName + ".txt";
+		  }
+		  if( xMSet.xU.IsBestand(FName) ) {
+			if( yesNoDialog("The file you defined already exists. Overwrite?", FName) == false ) return;
+		  }
+		  // kopieer
+		  do_log(5,"Moving to [" + FName + "]");
+		  xMSet.xU.copyFile( xMSet.getTextReportName() , FName );
+		  if( xMSet.xU.IsBestand( FName ) == false ) {
+			  do_error("Could not create file [" + FName + "]");
+		  }
+   	    }
+   	    catch( Exception e ) {
+   	    	do_error("doEndOfTextExport " + e.getMessage());
+   	    	return;
+   	    }
+   	    finally {
+   	      do_log(5,"Removing [" + xMSet.getTextReportName() + "]");
+   		  xMSet.xU.VerwijderBestand(xMSet.getTextReportName());
+	    }
+		
+    }
+    
+    private void doImportText()
+    {
+     	// Stop file
+   		this.resetInterrupt();
+   		//
+   		cmcProcFileChooser fc = new cmcProcFileChooser(xMSet.getRootDir(),false);
+    	String sFile = fc.getAbsoluteFilePath();
+    	if( sFile ==  null ) sFile = "No file specified";
+    	if( xMSet.xU.IsBestand(sFile) == false ) {
+    		popMessage("[" + sFile + "] is not a valid file");
+    		return;
+    	}
+        do_error( sFile ) ;
+        //
+        xMSet.createImportScanList(sFile);
+    	int aantal = xMSet.getScanListSize();
+    	if( aantal <= 0 ) {
+    		this.scanCheckBox.setSelected(false);
+    		popMessage("There are no valid archive files present in file [" + sFile + "]");
+    	}
+    	else {
+    	   	 requestTask( cmcProcSemaphore.TaskType.IMPORT_ALL_TEXT );
+    		 robotMode=false;
+    		 runCompleted=true; // triggert de start
+    	}
+    }
+    
+    // experimental
     private void prepareBubble()
     {
-    	this.popMessage("Currently no code forseen to re-inject text");
+    	this.popMessage("Re-insert is currenlty not supported (05 June)");
     	/*
      	gpFileChooser jc = new gpFileChooser(xMSet.getArchiveDir());
     	jc.setFilter("ARCHIVE");
@@ -3087,7 +3150,8 @@ public class comicImageProcessorMainGUI {
         //
         cmcBubbleMaker bubmak = new cmcBubbleMaker(xMSet,logger);
         bubmak.initialize( FileName );
-        *
         */
     }
+    
+    
 }

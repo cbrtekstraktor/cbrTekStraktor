@@ -1,6 +1,10 @@
 package cbrTekStraktorModel;
 
 import java.awt.Font;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Properties;
@@ -10,6 +14,7 @@ import java.util.UUID;
 import cbrTekStraktorProject.cbrTekStraktorProjectManager;
 import cbrTekStraktorProject.cmcProjectWrapper;
 import logger.logLiason;
+import monitor.cmcMonitorItem;
 import generalpurpose.gpLanguage;
 import generalpurpose.gpPrintStream;
 import generalpurpose.gpUtils;
@@ -66,6 +71,7 @@ public class cmcProcSettings {
 	private String currentArchiveFileName=null;
 	private boolean useMonoChromeInDialogs=false;
 	private String scanFolder = null;
+	private String exportFileName = null;
 	
 	//------------------------------------------------------------
     private void do_log(int logLevel , String sIn)
@@ -339,6 +345,55 @@ public class cmcProcSettings {
 		    }
 		    //
     }
+	//---------------------------------------------------------------------------------
+	public void createImportScanList(String FName)
+	//---------------------------------------------------------------------------------
+	{
+			scanFolder= xU.getParentFolderName(FName);
+			exportFileName = null;
+			scanList=null;
+			scanList = new ArrayList<cmcMonitorItem>();
+			boolean validformat=false;
+			try {
+			  BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(FName), getCodePageString()));
+	       	  //
+	       	  int aantal=0;
+	       	  String sLijn=null;
+          	  while ((sLijn=reader.readLine()) != null) {
+		           if( sLijn.trim().length() < 1) continue;
+          		   //
+          		   if( sLijn.trim().startsWith("<!--") ) {
+          			 String sComp = xU.keepLettersAndNumbers(sLijn).trim();
+          		     if( sComp.toUpperCase().startsWith("FORMATVERSION") ) {
+          			     sComp = xU.keepNumbers(sLijn).trim();
+          			     long vl = xU.NaarLong(sComp);
+          			     if( vl < cmcProcConstants.ExportFormatVersion ) {
+          			    	 do_error("Export Format Version is obsolete [" + vl + "] requires [" + cmcProcConstants.ExportFormatVersion + "]");
+          			     }
+          			     else { validformat = true; exportFileName = FName; continue; }
+          		     }
+                     //          		 
+          		     if( validformat == false ) continue;
+            		 // extract CMXUID
+          		     if( (sComp.startsWith("CMXUID")) && ( sComp.length() > ("CMXUID".length()+2) ) ) {
+          		    	   //String sFile = sComp.substring("CMXUID".length());
+          		    	   int l1 = sLijn.indexOf("[");
+          		    	   int l2 = sLijn.indexOf("]");
+          		    	   if( (l1<0) || (l2<0) || (l2<=l1) ) continue;
+          		    	   String sFile = sLijn.substring(l1+1,l2);
+          		    	   aantal++;
+        				   cmcMonitorItem x = new cmcMonitorItem((long)aantal);
+     			           x.setFileName(sFile);
+     			           scanList.add(x); 	 
+          		     }
+          		   }
+           	  }
+          	  reader.close();
+			}
+			catch(Exception e ) {
+		       do_error("Could not read [" + FName + "] " + e.getMessage() );		
+			}
+	}
 	
 	//---------------------------------------------------------------------------------
 	public int getScanListSize()
@@ -356,7 +411,7 @@ public class cmcProcSettings {
 		for(int i=0;i<scanList.size();i++)
 		{
 //do_error( scanList.get(i).getFileName() + " " + scanList.get(i).getStarttime() );
-			if ( scanList.get(i).processed == true ) continue;
+			if ( scanList.get(i).getProcessed() == true ) continue;
 			scanList.get(i).setProcessed(true);
 			scanList.get(i).setStarttime(System.currentTimeMillis());
 			return scanList.get(i).getFileName();
@@ -380,6 +435,24 @@ public class cmcProcSettings {
 			}
 		}
 		return false;
+	}
+	//
+	//---------------------------------------------------------------------------------
+	public boolean setCommentOnScanList(String BulkFileName,String Comment)
+	//---------------------------------------------------------------------------------
+	{
+			if( scanList == null ) return false;
+			if( scanList.size() == 0 ) return false;
+			for(int i=0;i<scanList.size();i++)
+			{ 
+				String FName =scanList.get(i).getFileName();
+				if( FName == null ) continue;
+				if( FName.compareToIgnoreCase(BulkFileName) == 0 ) {
+					scanList.get(i).setComment(Comment);
+					return true;
+				}
+			}
+			return false;
 	}
 	
 	//---------------------------------------------------------------------------------
@@ -455,6 +528,14 @@ public class cmcProcSettings {
 	public cmcProcEnums.BROWSER getBrowser()
 	{
 		return projman.getBrowser();
+	}
+	public String getTextReportName()
+	{
+		return projman.getOutputDir() + xU.ctSlash + "TextReport.txt";
+	}
+	public String getExportFileName()
+	{
+		return exportFileName;
 	}
 	// getters/setters FileNames
 	//---------------------------------------------------------------------------------
@@ -1090,6 +1171,7 @@ public class cmcProcSettings {
 			if( verbose) do_error("Unknown language Index [" + idx + "]");
 			return "UNKNOWN"; }
 	}
+
 	//---------------------------------------------------------------------------------
 	public String getTesseractLanguage(String cmxLanguage) 
 	//---------------------------------------------------------------------------------

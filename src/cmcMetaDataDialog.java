@@ -105,8 +105,7 @@ public class cmcMetaDataDialog {
 	private void initialize(JFrame jf,boolean isInfo)
 	//------------------------------------------------------------
 	{
-		String sTitel = xMSet.getOrigImageLongFileName();
-        if( xMSet.xU.IsBestand(sTitel) ) sTitel = xMSet.getMetaDataFileName();
+		String sTitel = "Image Metadata Info " + suggestTitle();
         //
 		try
         {
@@ -478,4 +477,21 @@ public class cmcMetaDataDialog {
 		sDir = xMSet.xU.keepLettersAndNumbers(sDir);
 		return sDir;
 	}
+	
+	//------------------------------------------------------------
+	private String suggestTitle()
+	//------------------------------------------------------------
+	{
+		String FileDirName=null;
+		if( requestToCreateEstafetteFile ) {
+			FileDirName = xMSet.getScanFolder();
+			if( xMSet.xU.IsDir(FileDirName) == false ) return "";
+			return "[" + FileDirName + "]";
+		}
+		else {
+		    FileDirName = xMSet.getOrigImageLongFileName();
+            if( xMSet.xU.IsBestand(FileDirName) ) FileDirName = xMSet.getMetaDataFileName();
+            return "[" + FileDirName + "]";
+		}
+    }
 }

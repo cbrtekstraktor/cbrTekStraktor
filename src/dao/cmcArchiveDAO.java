@@ -405,4 +405,62 @@ public class cmcArchiveDAO {
         return true;
 	}
 
+	// ---------------------------------------------------------------------------------
+	public boolean extractAllStatFiles(String TargetDir)
+	// ---------------------------------------------------------------------------------
+	{
+		return extractAllFilesBySuffix(TargetDir,"_stat.xml");
+	}
+	// ---------------------------------------------------------------------------------
+	public boolean extractAllLangFiles(String TargetDir)
+	// ---------------------------------------------------------------------------------
+	{
+		return extractAllFilesBySuffix(TargetDir,"_lang.xml");
+	}
+	
+	// ---------------------------------------------------------------------------------
+	public boolean extractAllFilesBySuffix(String TargetDir,String Suffix)
+	// ---------------------------------------------------------------------------------
+	{
+		xMSet.purgeDirByName( xMSet.getTempDir() , true );
+		//cmcArchiveDAO xao = new cmcArchiveDAO(xMSet,logger);
+		String ArcDir = xMSet.getArchiveDir();
+		ArrayList<String> list = xMSet.xU.GetFilesInDir(ArcDir,".zip");
+		for(int i=0;i<list.size();i++)
+		{
+			String ZipFileName = ArcDir + xMSet.xU.ctSlash + list.get(i);
+			String StatFileName = ZipFileName; //  <short>_set.zip
+			if( StatFileName == null ) continue;
+			StatFileName = xMSet.xU.RemplaceerIgnoreCase( ZipFileName , "_set.zip" , Suffix);
+			StatFileName = xMSet.xU.getFolderOrFileName( StatFileName );
+			String ExtractedFileName = this.unzip_SingleFile( ZipFileName , StatFileName );
+			if( ExtractedFileName == null ) continue;
+			
+			// Is it required to move to another Dir
+			if( TargetDir == null ) {
+				 do_log(9," => [Extr=" + ExtractedFileName + "] [Target=" + StatFileName + "]");
+				continue;
+			}
+			if( TargetDir.trim().compareToIgnoreCase(xMSet.getTempDir()) != 0 ) 
+			{
+			  String TargetFileName = TargetDir + xMSet.xU.ctSlash + StatFileName;
+			  do_log(9,"[Extr=" + ExtractedFileName + "] [Target=" + TargetFileName + "]");
+			  if( xMSet.xU.IsBestand(TargetFileName) ) {
+				xMSet.xU.VerwijderBestand( TargetFileName );
+				if( xMSet.xU.IsBestand(TargetFileName) ) continue;
+			  }
+			  try {
+				xMSet.xU.copyFile( ExtractedFileName , TargetFileName );
+				xMSet.xU.VerwijderBestand( ExtractedFileName );
+			  }
+			  catch (Exception e ) {
+				do_error("Cannot move [" + ExtractedFileName  + "] to [" + TargetFileName + "]");
+				continue;
+			  }
+			}
+		}		
+		//xao=null;
+		return true;
+	}
+
 }
