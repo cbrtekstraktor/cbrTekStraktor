@@ -59,6 +59,7 @@ import java.awt.event.ItemEvent;
 import logger.logLiason;
 import logger.nioServerDaemon;
 import monitor.cmcMonitorController;
+import ocr.cmcOCRController;
 import cbrTekStraktorModel.cmcProcConstants;
 import cbrTekStraktorModel.cmcProcController;
 import cbrTekStraktorModel.cmcProcEnums;
@@ -2244,6 +2245,7 @@ public class comicImageProcessorMainGUI {
 	//-----------------------------------------------------------------------
 	{
 		//ImageDetailLabel.setText(s);
+		//do_error( s);
 		statusMessage.setText(s);
 	}
 	
@@ -3153,5 +3155,14 @@ public class comicImageProcessorMainGUI {
         */
     }
     
+    //-----------------------------------------------------------------------
+  	public void doTesseractVersionDialog()
+  	//-----------------------------------------------------------------------
+  	{
+  		cmcOCRController ocro = new cmcOCRController( xMSet , logger);
+  		String sversion = ocro.getTesseractVersion();
+  		ocro = null;
+  		this.popMessage( sversion);
+  	}
     
 }

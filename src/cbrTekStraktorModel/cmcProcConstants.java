@@ -5,8 +5,8 @@ import java.awt.Color;
 public class cmcProcConstants {
 	
 	public static String Application = "cbrTekStraktor";
-	public static String Version = "V0.2";
-	public static String Build = "12-June-2017";
+	public static String Version = "V0.3";
+	public static String Build = "1-May-2018";
 	public static long   ExportFormatVersion = 20170601;    // used to detect incompatible export files
 	
 	public static int   QUICKEDITBORDER = 18;
@@ -15,7 +15,7 @@ public class cmcProcConstants {
     public static int   MAXIMAL_DPI = 300; // Tesseract works fine at 300
 	
     public static String LINUX_TESSERACTHOME = "/usr/bin";
-    public static String MSDOS_TESSERACTHOME = "C:\\temp\\Tesseract-OCR-4\\Tesseract-OCR";
+    public static String MSDOS_TESSERACTHOME = "C:\\temp\\Tesseract-4-64Bit\\Tesseract-OCR";
     
     public static int MAX_TRANSLATED_LINES = 150;
 	

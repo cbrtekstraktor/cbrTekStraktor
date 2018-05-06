@@ -72,6 +72,7 @@ public class cmcProcSettings {
 	private boolean useMonoChromeInDialogs=false;
 	private String scanFolder = null;
 	private String exportFileName = null;
+	private String OCRSummaryResult = null;
 	
 	//------------------------------------------------------------
     private void do_log(int logLevel , String sIn)
@@ -1176,12 +1177,18 @@ public class cmcProcSettings {
 	public String getTesseractLanguage(String cmxLanguage) 
 	//---------------------------------------------------------------------------------
 	{
-        String code = langObj.getTesseractLanguageCode(cmxLanguage);
-        if( code == null ) {
-		  do_error("Currently unsupported language [" + cmxLanguage + "] - you will need to review method gettesseractLanguage");
-		  code= "eng";
+		String code = null;
+		try {
+         code = langObj.getTesseractLanguageCode(cmxLanguage);
+ 		 if( code == null ) {
+			do_error("Currently unsupported language [" + cmxLanguage + "] - you will need to review method gettesseractLanguage");
+			code= "eng";
+	     }
         }
-        return code;
+		catch( Exception e ) {
+	       code = "eng";			  
+		}
+	    return code;
 	}
     //---------------------------------------------------------------------------------
 	public String getPreferredLanguageLong()
@@ -1196,14 +1203,26 @@ public class cmcProcSettings {
 		return projman.getBackDropType();
 	}
 	
+	//---------------------------------------------------------------------------------
 	public String getScanFolder()
+	//---------------------------------------------------------------------------------
 	{
 		return scanFolder;
 	}
 	
-	public String getOCRSummaryResult()
+	//---------------------------------------------------------------------------------
+	public void setOCRSummaryResult(String s)
+	//---------------------------------------------------------------------------------
 	{
-		return "todo-summary result";
+		OCRSummaryResult = s;
+	}
+	
+	//---------------------------------------------------------------------------------
+	public String getOCRSummaryResult()
+	//---------------------------------------------------------------------------------
+	{
+		//do_error( OCRSummaryResult );
+		return OCRSummaryResult == null ? "" : OCRSummaryResult.trim();
 	}
 	
 	

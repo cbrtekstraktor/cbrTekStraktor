@@ -870,7 +870,10 @@ public class cmcProcController extends SwingWorker<Integer, Integer> {
 	private boolean run_tesseract()
 	//-----------------------------------------------------------------------
 	{
-		boolean ib = ocrcon.run_tesseract();
+		boolean ib = ocrcon.run_tesseract( cmcOCRController.TESSERACTCOMMAND.DO_OCR );
+		if( ib ) {  // April 2018 - added conclude
+			ib = ocrcon.conclude_Tesseract();
+		}
 		if( ib ) {
 			ib = ocrcon.mergeOCRText();
 		}

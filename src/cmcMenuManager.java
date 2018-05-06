@@ -214,6 +214,7 @@ public class cmcMenuManager {
 		case QUICK_EDIT    : { memShared.performCallback("doQuickEdit"); break; }
 		case DETAILED_EDIT : { memShared.performCallback("doDetailedEdit"); break; }
 		case TESSERACT_OPTIONS  : { memShared.performCallback("doTesseractOptionDialog"); break; }
+		case TESSERACT_VERSION  : { memShared.performCallback("doTesseractVersionDialog"); break; }
 		case IMPORT_TEXT   : { memShared.performCallback("doImportText"); break; }
 		case EXPORT_TEXT   : { memShared.performCallback("doExportText"); break; }
 		//
@@ -328,6 +329,7 @@ public class cmcMenuManager {
 			setMenuItemStatus( cbrTekStraktorModel.cmcProcEnums.MENU_ITEMS.INFO , true );
 			setMenuItemStatus( cbrTekStraktorModel.cmcProcEnums.MENU_ITEMS.GENERAL_PROPERTIES , true );
 			setMenuItemStatus( cbrTekStraktorModel.cmcProcEnums.MENU_ITEMS.TESSERACT_OPTIONS , true );
+			setMenuItemStatus( cbrTekStraktorModel.cmcProcEnums.MENU_ITEMS.TESSERACT_VERSION , true );
 			//
 			setMenuItemStatus( cbrTekStraktorModel.cmcProcEnums.MENU_ITEMS.RECENT1 , true );
 			setMenuItemStatus( cbrTekStraktorModel.cmcProcEnums.MENU_ITEMS.RECENT2 , true );
