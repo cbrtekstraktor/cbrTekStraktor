@@ -10,9 +10,11 @@ The text extraction is achieved by a combination of statistical and graphical pr
 
 Apache Tesseract is used to perform Optical Character Recognition on the extracted text.
 
-Google Tensorflow is used to post-process the text balloon detection.
+Google's Tensorflow Inception Visual Recognition Convolution Neural Network is used to post-process the text balloon detection (*). 
 
 A subsequent version of the application will
 •	integrate with translation software in order to provide automated translation of comic book texts.
 •	Provide a mechanism to automatically re-inject translated text into the text balloons
 
+
+(*)Importantly. Detailed instructions for training TensorFlow Inception CNN and how to use this option will be provided in the user manual before mid May 2018. As of today (May 13, 2018) the instructions as well as the supporting Python scripts are not in the GitHub source code repository.
