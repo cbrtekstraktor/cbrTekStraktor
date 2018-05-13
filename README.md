@@ -10,6 +10,8 @@ The text extraction is achieved by a combination of statistical and graphical pr
 
 Apache Tesseract is used to perform Optical Character Recognition on the extracted text.
 
+Google Tensorflow is used to post-process the text balloon detection.
+
 A subsequent version of the application will
 •	integrate with translation software in order to provide automated translation of comic book texts.
 •	Provide a mechanism to automatically re-inject translated text into the text balloons

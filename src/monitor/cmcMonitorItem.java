@@ -8,6 +8,7 @@ public class cmcMonitorItem {
 	long starttime=-1L;
 	long endtime=-1L;
 	String comment=null;
+	Object obj=null;
 	
 	public cmcMonitorItem(long uid)
 	{
@@ -17,6 +18,7 @@ public class cmcMonitorItem {
 		starttime=-1L;
 		endtime=-1L;
 		comment=null;
+	    obj=null;	
 	}
 	//
 	public boolean getProcessed() { return processed; }
@@ -25,6 +27,7 @@ public class cmcMonitorItem {
 	public long getStarttime()    { return starttime; }
 	public long getEndtime()      { return endtime; }
 	public String getComment()    { return comment; }
+	public Object getObject()     { return obj; }
 	//
 	public void setProcessed(boolean ib) { processed=ib; }
 	public void setUID(long li)          { UID = li; }
@@ -32,5 +35,6 @@ public class cmcMonitorItem {
 	public void setStarttime(long li)    { starttime = li; }
 	public void setEndtime(long li)      { endtime = li; }
 	public void setComment(String s)     { comment = s; }
+	public void setObject(Object o)      { obj=o; }
 	//
 }

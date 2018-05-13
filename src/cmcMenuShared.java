@@ -45,6 +45,7 @@ public class cmcMenuShared {
 	boolean performCallback(String sCallbackFunction , String param)
 	//---------------------------------------------------------------------------------
 	{
+	//System.err.println( sCallbackFunction );
 	try {
 	  Class<?> c = Class.forName(parentProcess.getClass().getName());
 	  Method[] allMethods = c.getDeclaredMethods();

@@ -2,7 +2,6 @@ package cbrTekStraktorModel;
 
 import java.awt.Font;
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -11,6 +10,9 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
 
+import tensorflow.cmcVRArchive;
+import tensorflow.cmcVRMakeTrainingImages;
+import tensorflow.cmcVRParagraph;
 import cbrTekStraktorProject.cbrTekStraktorProjectManager;
 import cbrTekStraktorProject.cmcProjectWrapper;
 import logger.logLiason;
@@ -73,7 +75,8 @@ public class cmcProcSettings {
 	private String scanFolder = null;
 	private String exportFileName = null;
 	private String OCRSummaryResult = null;
-	
+    private boolean performTensorFlowPostProcess = false;
+    
 	//------------------------------------------------------------
     private void do_log(int logLevel , String sIn)
 	//------------------------------------------------------------
@@ -276,6 +279,16 @@ public class cmcProcSettings {
 			return clusterDefaultClassificationMethod;
 	}
 	
+	public void setTensorFlowPostProcessIndicator(boolean ib)
+	{
+		this.performTensorFlowPostProcess = ib;
+	}
+	public boolean getTensorFlowPostProcessIndicator()
+	{
+		return performTensorFlowPostProcess;
+	}
+	
+	
 	//---------------------------------------------------------------------------------
 	public cmcProcEnums.BinarizeClassificationMethod getDefaultBinarizeClassificationMethod()
 	//---------------------------------------------------------------------------------
@@ -395,6 +408,78 @@ public class cmcProcSettings {
 		       do_error("Could not read [" + FName + "] " + e.getMessage() );		
 			}
 	}
+
+	//---------------------------------------------------------------------------------
+	public boolean createTensorTrainingSetList()
+	//---------------------------------------------------------------------------------
+	{
+		scanList=null;
+		ArrayList<String> alist = xU.GetFilesInDir( getArchiveDir() , null );
+		if( alist == null ) {
+			do_error("Cannot read files in [" + getArchiveDir() + "]");
+			return false;
+		}
+		scanList = new ArrayList<cmcMonitorItem>();
+		for(int i=0; i<alist.size(); i++)
+		{
+			if( alist.get(i).toUpperCase().trim().endsWith(".ZIP") ) {
+      			cmcMonitorItem y = new cmcMonitorItem( (long)i );
+    	    	y.setFileName( alist.get(i) );
+    	    	scanList.add( y );
+			}
+		}
+        return true;
+	}
+	//---------------------------------------------------------------------------------
+	public void createTensorParagraphCheckList(String LongFName)
+	//---------------------------------------------------------------------------------
+	{
+			scanList=null;
+			String ShortFileName = xU.GetFileName(LongFName);
+			scanList = new ArrayList<cmcMonitorItem>();
+		 	cmcMonitorItem x = new cmcMonitorItem(System.currentTimeMillis());
+	    	x.setFileName( ShortFileName );
+	    	x.setStarttime(System.currentTimeMillis());
+	    	x.setProcessed(true);
+	      	x.setComment("Busy");
+	    	scanList.add(x);
+	        //
+			cmcVRMakeTrainingImages ms = new cmcVRMakeTrainingImages( this , logger );
+	    	boolean ib = ms.make_single_set( ShortFileName );
+	    	if( ib ) {
+	    	  ArrayList<cmcVRArchive> mlist = ms.getList();
+	    	  scanList.get(0).setEndtime(System.currentTimeMillis());
+	      	  scanList.get(0).setProcessed(true);
+	      	  scanList.get(0).setComment("Failed");
+		      if( mlist == null ) return;
+	    	  if( mlist.size() == 0 ) return;
+	    	  ArrayList<cmcVRParagraph> plist = mlist.get(0).getplist();
+	    	  int ncnt = ( plist == null ) ? 0 : plist.size();
+	      	  scanList.get(0).setComment("[" + ncnt + "] images extracted in [" + ((System.currentTimeMillis()-scanList.get(0).getStarttime())/1000L) + "] seconds");
+              // do we also need to process the images extracted ?
+	      	  if( this.getTensorFlowPostProcessIndicator() ) {
+	      		  scanList = null;   // 
+	      		  scanList = new ArrayList<cmcMonitorItem>();
+	      		  for(int i=0;i<plist.size();i++)
+	      		  {
+	      			cmcMonitorItem y = new cmcMonitorItem( plist.get(i).getUID() );
+	    	    	y.setFileName( plist.get(i).getLongImageFileName() );
+	    	    	y.setObject( plist.get(i) );
+	    	    	scanList.add( y );
+	    	    }
+	      	  }
+	    	}
+	        ms=null;
+	}
+
+	//---------------------------------------------------------------------------------
+	public String getStatusTensorFlowSingleSet()
+	//---------------------------------------------------------------------------------
+	{
+	     if( scanList == null) return "Could not start extraction";
+	     if( scanList.size() < 1) return "Could not extract images";
+	     return "[" + scanList.get(0).getFileName() + "] " + scanList.get(0).getComment();
+	}
 	
 	//---------------------------------------------------------------------------------
 	public int getScanListSize()
@@ -439,7 +524,7 @@ public class cmcProcSettings {
 	}
 	//
 	//---------------------------------------------------------------------------------
-	public boolean setCommentOnScanList(String BulkFileName,String Comment)
+	public boolean setCommentOnScanList(String BulkFileName , String Comment)
 	//---------------------------------------------------------------------------------
 	{
 			if( scanList == null ) return false;
@@ -455,7 +540,50 @@ public class cmcProcSettings {
 			}
 			return false;
 	}
-	
+	//
+	//---------------------------------------------------------------------------------
+	public Object getObjectFromScanList(String BulkFileName )
+	//---------------------------------------------------------------------------------
+	{
+			if( scanList == null ) return null;
+			if( scanList.size() == 0 ) return null;
+			for(int i=0;i<scanList.size();i++)
+			{ 
+				String FName =scanList.get(i).getFileName();
+				if( FName == null ) continue;
+				if( FName.compareToIgnoreCase(BulkFileName) == 0 ) {
+					return scanList.get(i).getObject();
+				}
+			}
+			return null;
+	}
+	//
+	//---------------------------------------------------------------------------------
+	public Object getObjectFromScanList(int idx )
+	//---------------------------------------------------------------------------------
+	{
+			if( scanList == null ) return null;
+			if( scanList.size() <= idx ) return null;
+			return scanList.get(idx).getObject();
+	}
+	//
+	//---------------------------------------------------------------------------------
+	public boolean setObjectOnScanList(String BulkFileName , Object obj)
+	//---------------------------------------------------------------------------------
+	{
+			if( scanList == null ) return false;
+			if( scanList.size() == 0 ) return false;
+			for(int i=0;i<scanList.size();i++)
+			{ 
+				String FName =scanList.get(i).getFileName();
+				if( FName == null ) continue;
+				if( FName.compareToIgnoreCase(BulkFileName) == 0 ) {
+					scanList.get(i).setObject(obj);
+					return true;
+				}
+			}
+			return false;
+	}
 	//---------------------------------------------------------------------------------
 	public ArrayList<cmcMonitorItem> getMonitorList()
 	//---------------------------------------------------------------------------------
@@ -1202,27 +1330,42 @@ public class cmcProcSettings {
 	{
 		return projman.getBackDropType();
 	}
-	
+	//---------------------------------------------------------------------------------
+	public String getPythonHomeDir()
+	//---------------------------------------------------------------------------------
+	{
+		return projman.getPyhtonHomeDir();
+	}
+	//---------------------------------------------------------------------------------
+	public String getTensorDir()
+	//---------------------------------------------------------------------------------
+	{
+		return projman.getTensorDir();
+	}
 	//---------------------------------------------------------------------------------
 	public String getScanFolder()
 	//---------------------------------------------------------------------------------
 	{
 		return scanFolder;
 	}
-	
 	//---------------------------------------------------------------------------------
 	public void setOCRSummaryResult(String s)
 	//---------------------------------------------------------------------------------
 	{
 		OCRSummaryResult = s;
 	}
-	
 	//---------------------------------------------------------------------------------
 	public String getOCRSummaryResult()
 	//---------------------------------------------------------------------------------
 	{
 		//do_error( OCRSummaryResult );
 		return OCRSummaryResult == null ? "" : OCRSummaryResult.trim();
+	}
+	//---------------------------------------------------------------------------------
+	public String getTensorSummaryResult()
+	//---------------------------------------------------------------------------------
+	{
+		return getOCRSummaryResult();
 	}
 	
 	

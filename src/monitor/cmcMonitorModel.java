@@ -6,7 +6,6 @@ import java.lang.reflect.Type;
 import javax.swing.table.AbstractTableModel;
 
 import logger.logLiason;
-import cbrTekStraktorModel.cmcProcEnums;
 import cbrTekStraktorModel.cmcProcSettings;
 
 

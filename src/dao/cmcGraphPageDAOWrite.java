@@ -135,7 +135,6 @@ public class cmcGraphPageDAOWrite {
 		// link the attach file to it  
 		app = new gpAppendStream(FTgt,xMSet.getCodePageString());
 		
-		
 		// start copying and updating
 		try {
 			File inFile  = new File(FNaam);  // File to read from.

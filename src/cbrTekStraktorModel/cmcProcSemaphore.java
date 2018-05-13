@@ -11,8 +11,9 @@ public class cmcProcSemaphore {
 		                  PROCESS_MAINFRAME, PROCESS_BLUEPRINT ,
 		                  PROCESS_CONVOLUTION_GAUSSIAN, PROCESS_CONVOLUTION_GLOW , PROCESS_CONVOLUTION_SHARPEN , 
 		                  PROCESS_CONVOLUTION_EDGE ,
-		                  PREPARE_OCR , SHOW_OCR_FILE , RUN_TESSERACT ,
-		                  EXTRACT_ALL_TEXT , IMPORT_ALL_TEXT }
+		                  PREPARE_OCR , SHOW_OCR_FILE , RUN_TESSERACT , EDIT_OCR_FILE ,
+		                  EXTRACT_ALL_TEXT , IMPORT_ALL_TEXT ,
+		                  TENSORFLOW_MAKE_TRAINING_SET , TENSORFLOW_MAKE_SINGLE_SET }
 	
 	TaskType sema = TaskType.DO_NOTHING;
 	

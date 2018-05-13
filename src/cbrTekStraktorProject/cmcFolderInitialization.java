@@ -28,6 +28,7 @@ public class cmcFolderInitialization {
     private String sCacheDir=null;
     private String sArchiveDir=null;
     private String sOCRDir=null;
+    private String sTensorDir=null;
     
     
 	//------------------------------------------------------------
@@ -81,6 +82,7 @@ public class cmcFolderInitialization {
     public String getCacheDir()       { return sCacheDir; }
     public String getArchiveDir()     { return sArchiveDir; }
     public String getOCRDir()         { return sOCRDir; }
+    public String getTensorDir()      { return sTensorDir; }
     //	
 	    
     //---------------------------------------------------------------------------------
@@ -262,7 +264,20 @@ public class cmcFolderInitialization {
 	    	 isOK=false;
 	    	}
 	    }
-
+        //
+	    //
+	    sTensorDir = sRootDir + xMSet.xU.ctSlash + "Tensorflow";
+	    if( xMSet.xU.IsDir(sTensorDir) == false ) 
+	    {
+	    	if( fixit ) {
+	    		createFolder(sTensorDir);
+	    	}
+	    	else {
+	    	 ErrIt("TensorFlow folder [" + sTensorDir + "] cannot be accessed");
+	    	 isOK=false;
+	    	}
+	    }
+	    
 	    // Files
 	    // StyleSheet - indien niet bestaand maken
 	    String FNaam = sReportHTMLDir + xMSet.xU.ctSlash + "cbrTekStraktorCSS.txt";

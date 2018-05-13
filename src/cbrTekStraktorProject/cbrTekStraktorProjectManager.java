@@ -99,10 +99,13 @@ public class cbrTekStraktorProjectManager {
     public String getCacheDir()       { return currProj.getCacheDir(); }
     public String getArchiveDir()     { return currProj.getArchiveDir(); }
     public String getOCRDir()         { return currProj.getOCRDir(); }
+    public String getTensorDir()      { return currProj.getTensorDir(); }
     //
     public String getDateformat()        { return currProj.getDateformat(); }
     public int getMeanCharacterCount()   { return currProj.getMeanCharacterCount(); }
     public String getTesseractDir()      { return currProj.getTesseractDir(); }
+    public String getPyhtonHomeDir()     { return currProj.getPythonHomeDir(); }
+    
     public Font getPreferredFont()       { return currProj.getPreferredFont(); }
     public String getPreferredFontName() { return currProj.getPreferredFontName();}
     public int getPreferredFontSize()    { return currProj.getPreferredFontSize(); }

@@ -60,6 +60,7 @@ import logger.logLiason;
 import logger.nioServerDaemon;
 import monitor.cmcMonitorController;
 import ocr.cmcOCRController;
+import tensorflow.cmcVRMakeTrainingImages;
 import cbrTekStraktorModel.cmcProcConstants;
 import cbrTekStraktorModel.cmcProcController;
 import cbrTekStraktorModel.cmcProcEnums;
@@ -947,7 +948,8 @@ public class comicImageProcessorMainGUI {
 			     		 case DO_BINARIZE   : { doe_cc(); break; }
 			     		 case DO_CONNECTEDCOMPONENT : { runCompleted=true; enable_controls(cbrTekStraktorModel.cmcProcEnums.APPLICATION_STATE.EXTRACTED); lastImageFileName=null; timeStat.setEndToEnd(ctrl.getActualEndToEndTime()); syncMonitorEnd(); break; }
 			     		 case PREPARE_OCR   : { enable_controls(cbrTekStraktorModel.cmcProcEnums.APPLICATION_STATE.OCR_BUSY); doe_show_ocr_file(); break; }
-			     		 case SHOW_OCR_FILE : { doe_tesseract(); break; }
+			     		 case EDIT_OCR_FILE : { doe_tesseract(); break; }
+			     		 case SHOW_OCR_FILE : { ask_tesseractoption(); break; }
 			     		 case RUN_TESSERACT : { process_ocr_result(); runCompleted=true; syncMonitorEnd(); enable_controls(cbrTekStraktorModel.cmcProcEnums.APPLICATION_STATE.IDLE); break; } 
 			     		 default : { do_error("Wrong status in robot mode [" + sema + "]"); break; }
 			     		 }
@@ -988,7 +990,11 @@ public class comicImageProcessorMainGUI {
 					                                 break; }
 			     		 //case PREPARE_OCR : break;
 			     		 case EXTRACT_ALL_TEXT : { doEndOfTextExport(); break; }
-			     		 case IMPORT_ALL_TEXT  : { do_error("einde import"); break; }
+			     		 case IMPORT_ALL_TEXT  : { do_log( 9 , "Import completed"); break; }
+			     		 //
+			     		 case TENSORFLOW_MAKE_TRAINING_SET : { endTensorFlowMakeTrainingSet(); break; }
+			     		 case TENSORFLOW_MAKE_SINGLE_SET : { endTensorFlowExtractSingleSet(); break; }
+			     		 //
 			     		 default : { do_error("Wrong status in NON robot mode [" + sema + "]"); break; }
 			     		 }
 			     	     	 
@@ -2814,11 +2820,21 @@ public class comicImageProcessorMainGUI {
 	}
 	
 	//-----------------------------------------------------------------------
+	private void ask_tesseractoption()
+	//-----------------------------------------------------------------------
+	{
+	  // TODO
+	  //boolean ib = yesNoDialog("Would you like to edit the OCR image" , "OCR Image" );
+	  robotMode=true;  // just to force the correct state in the timer process
+	  requestTask( cmcProcSemaphore.TaskType.EDIT_OCR_FILE );	
+	}
+	
+	//-----------------------------------------------------------------------
 	private void doe_tesseract()
 	//-----------------------------------------------------------------------
 	{
-			robotMode=true;  // just to force the correct state in the timer process
-			requestTask( cmcProcSemaphore.TaskType.RUN_TESSERACT );	
+	  robotMode=true;  // just to force the correct state in the timer process
+	  requestTask( cmcProcSemaphore.TaskType.RUN_TESSERACT );	
 	}
 	
 	//-----------------------------------------------------------------------
@@ -3077,7 +3093,9 @@ public class comicImageProcessorMainGUI {
 		return;
     }
     
+    //-----------------------------------------------------------------------
     private void doEndOfTextExport()
+    //-----------------------------------------------------------------------
     {
    	    if( xMSet.xU.IsBestand(xMSet.getTextReportName())==false ) {
    	    	do_error("Report export file not found [" + xMSet.getTextReportName() + "]");
@@ -3111,8 +3129,9 @@ public class comicImageProcessorMainGUI {
 	    }
 		
     }
-    
+    //-----------------------------------------------------------------------
     private void doImportText()
+    //-----------------------------------------------------------------------
     {
      	// Stop file
    		this.resetInterrupt();
@@ -3124,7 +3143,7 @@ public class comicImageProcessorMainGUI {
     		popMessage("[" + sFile + "] is not a valid file");
     		return;
     	}
-        do_error( sFile ) ;
+        //do_error( sFile ) ;
         //
         xMSet.createImportScanList(sFile);
     	int aantal = xMSet.getScanListSize();
@@ -3164,5 +3183,82 @@ public class comicImageProcessorMainGUI {
   		ocro = null;
   		this.popMessage( sversion);
   	}
-    
+  	
+    //-----------------------------------------------------------------------
+  	public void doTensorFlowSettings()
+  	//-----------------------------------------------------------------------
+  	{
+  		popMessage( "TensorFlow settings - TODO");
+  	}
+  	
+    //-----------------------------------------------------------------------
+  	public void doTensorFlowMakeTrainingSet()
+  	//-----------------------------------------------------------------------
+  	{
+  		xMSet.createTensorTrainingSetList();
+     	int aantal = xMSet.getScanListSize();
+     	if( aantal <= cmcProcConstants.MIN_TENSORFLOW_FLOW_ARCHIVE_FILES ) {
+     		String sMsg = "There are too few archive files [" + aantal + "] present in [" + xMSet.getArchiveDir() + "]\nMinimum number of files required [" + cmcProcConstants.MIN_TENSORFLOW_FLOW_ARCHIVE_FILES + "]\nDo you want to continue?";
+     		boolean ib = yesNoDialog(sMsg, "Creation of TensorFlow training set");
+     		if( ib == false ) return;
+     	}
+     	requestTask( cmcProcSemaphore.TaskType.TENSORFLOW_MAKE_TRAINING_SET );
+     	robotMode=false;
+     	runCompleted=true; // triggert de start
+  	}
+
+  	//-----------------------------------------------------------------------
+  	public void doTensorFlowReadjustment()
+  	//-----------------------------------------------------------------------
+  	{
+  		doTensorFlowSingle(true);
+  	}
+  //-----------------------------------------------------------------------
+  	public void doTensorFlowExtractSingleSet()
+  	//-----------------------------------------------------------------------
+  	{
+  		doTensorFlowSingle(false);
+  	}
+  	//-----------------------------------------------------------------------
+  	public void doTensorFlowSingle(boolean readjust)
+  	//-----------------------------------------------------------------------
+  	{
+  		 xMSet.setTensorFlowPostProcessIndicator(readjust);
+  		 gpFileChooser jc = new gpFileChooser(xMSet.getArchiveDir());
+    	 jc.setFilter("ARCHIVE");
+    	 jc.runDialog();
+         String LongFileName = jc.getAbsoluteFilePath();
+         if( LongFileName==null ) return;
+         xMSet.createTensorParagraphCheckList(LongFileName);
+      	 int aantal = xMSet.getScanListSize();
+     	 if( aantal <= 0 ) {
+     		popMessage("Archive could not be read [" + LongFileName + "]");
+     	 }
+     	 else {
+     		 xMSet.setCurrentArchiveFileName( LongFileName );
+     	   	 requestTask( cmcProcSemaphore.TaskType.TENSORFLOW_MAKE_SINGLE_SET );
+     		 robotMode=false;
+     		 runCompleted=true; // triggert de start
+     	 }
+    }
+  	//-----------------------------------------------------------------------
+  	private void endTensorFlowMakeTrainingSet()
+  	//-----------------------------------------------------------------------
+  	{
+ 	 popMessage("You may now manually classify the sample images into ValidBubble and InvalidBubble");
+  	}
+
+  	//-----------------------------------------------------------------------
+  	private void endTensorFlowExtractSingleSet()
+  	//-----------------------------------------------------------------------
+  	{
+  	  if( xMSet.getTensorFlowPostProcessIndicator() == false ) popMessage(xMSet.getStatusTensorFlowSingleSet());
+  	  else {
+  		  String ErrMsg = xMSet.getTensorSummaryResult();
+  		  if( ErrMsg == null) return;
+  		  if( ErrMsg.trim().length()  < 1 ) return;
+  		  popMessage(ErrMsg);
+  	  }
+	  xMSet.setCurrentArchiveFileName(null);
+  	}
 }

@@ -115,11 +115,13 @@ public class cmcProjectWrapper {
     public String getCacheDir()       { return ina.getCacheDir(); }
     public String getArchiveDir()     { return ina.getArchiveDir(); }
     public String getOCRDir()         { return ina.getOCRDir(); }
+    public String getTensorDir()      { return ina.getTensorDir(); }
     //
     //
 	public void setDateformat(String s)        { core.setDateformat(s); }
     public void setMeanCharacterCount(int i)   { core.setMeanCharacterCount(i); }
     public void setTesseractDir(String s)      { core.setTesseractDir(s); }
+    public void setPythonHomeDir(String s)     { core.setPythonHomeDir(s); }
     public void setPreferredFontName(String s) { core.setPreferredFontName(s) ; }
     public void setPreferredFontSize(int i)    { core.setPreferredFontSize(i) ; }
     public void setPreferredFont(Font x)       { core.setPreferredFont(x) ; }
@@ -136,6 +138,7 @@ public class cmcProjectWrapper {
     public String getDateformat()         { return core.getDateformat(); }
     public int getMeanCharacterCount()    { return core.getMeanCharacterCount(); }
     public String getTesseractDir()       { return core.getTesseractDir(); }
+    public String getPythonHomeDir()      { return core.getPythonHomeDir(); }
     public Font getPreferredFont()        { return core.getPreferredFont(); }
     public String getPreferredFontName()  { return core.getPreferredFontName(); }
     public int getPreferredFontSize()     { return core.getPreferredFontSize(); }

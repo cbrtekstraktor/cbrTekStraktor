@@ -20,6 +20,9 @@ import drawing.cmcGraphController;
 import javax.swing.SwingWorker;
 
 import ocr.cmcOCRController;
+import tensorflow.cmcVRPublishResults;
+import tensorflow.cmcVRRunTensorFlow;
+import tensorflow.cmcVRMakeTrainingImages;
 import textProcessing.cmcTextExport;
 import textProcessing.cmcTextImport;
 import logger.logLiason;
@@ -275,6 +278,11 @@ public class cmcProcController extends SwingWorker<Integer, Integer> {
              	cSema.setSemaphore(taskTipe);
                 taskTipe = cmcProcSemaphore.TaskType.DO_NOTHING; 
               	break; }
+            case EDIT_OCR_FILE : {
+            	resetTimerStats();
+             	cSema.setSemaphore(taskTipe);
+                taskTipe = cmcProcSemaphore.TaskType.DO_NOTHING; 
+              	break; }
             case RUN_TESSERACT : {
             	if( run_tesseract() ) {
             		cSema.setSemaphore(taskTipe);
@@ -296,7 +304,18 @@ public class cmcProcController extends SwingWorker<Integer, Integer> {
             	taskTipe = cmcProcSemaphore.TaskType.DO_NOTHING; 
                 break;
                 }
-
+            case TENSORFLOW_MAKE_TRAINING_SET : {
+            	tensorflow_make_training_set();
+            	cSema.setSemaphore(taskTipe); 
+            	taskTipe = cmcProcSemaphore.TaskType.DO_NOTHING; 
+                break;
+                }
+            case TENSORFLOW_MAKE_SINGLE_SET : {
+            	tensorflow_make_single_set();
+            	cSema.setSemaphore(taskTipe); 
+            	taskTipe = cmcProcSemaphore.TaskType.DO_NOTHING; 
+                break;
+                }
             case DO_NOTHING : break;
             default : { do_error("Unknown semaphore state [" + taskTipe  + "]"); break; }
             }
@@ -871,9 +890,6 @@ public class cmcProcController extends SwingWorker<Integer, Integer> {
 	//-----------------------------------------------------------------------
 	{
 		boolean ib = ocrcon.run_tesseract( cmcOCRController.TESSERACTCOMMAND.DO_OCR );
-		if( ib ) {  // April 2018 - added conclude
-			ib = ocrcon.conclude_Tesseract();
-		}
 		if( ib ) {
 			ib = ocrcon.mergeOCRText();
 		}
@@ -989,4 +1005,34 @@ public class cmcProcController extends SwingWorker<Integer, Integer> {
 		teim.importAllText();
 		teim=null;
 	}
+	
+	//-----------------------------------------------------------------------
+	private void tensorflow_make_training_set()
+	//-----------------------------------------------------------------------
+	{
+	 	cmcVRMakeTrainingImages ms = new cmcVRMakeTrainingImages( xMSet , logger );
+    	ms.make_training_set_via_monitor();
+    	ms = null;
+    }
+
+	//-----------------------------------------------------------------------
+	private void tensorflow_make_single_set()
+	//-----------------------------------------------------------------------
+	{
+		// check whether it is only required to extract the files
+		if( xMSet.getTensorFlowPostProcessIndicator() == false ) return;
+		// run tensorflow visual recognition
+		xMSet.setOCRSummaryResult(null);
+		cmcVRRunTensorFlow vr = new cmcVRRunTensorFlow(xMSet,logger);
+		boolean ib = vr.performVisualRecognition();
+		// feedback the results into the archive files
+		if( ib == true ) {
+			cmcVRPublishResults pr = new cmcVRPublishResults(xMSet,logger);
+			ib = pr.process_results();
+			pr=null;
+		}
+		if( ib == false ) xMSet.setOCRSummaryResult(vr.getErrorMessage());
+		vr=null;
+	}
+
 }

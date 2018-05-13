@@ -72,6 +72,12 @@ public class cmcMenuManager {
 		moreMenu.setFont(xfont);
 		moreMenu.setOpaque(true);
 		//
+		//
+		JMenu tensorMenu = new JMenu("TensorFlow");
+		editMenu.setPreferredSize(new Dimension(Breedte,menuBar.getHeight()));
+		editMenu.setFont(xfont);
+		editMenu.setOpaque(true);
+		//
 		for(int i=0;i<arMenuItem.length;i++) arMenuItem[i]=null;
 		//
 		menuBar.add(fileMenu);
@@ -154,6 +160,15 @@ public class cmcMenuManager {
 				current = toolsMenu;
 				continue;
 			}
+			if( sText.compareToIgnoreCase("TENSORFLOW") == 0) {
+				current.add(tensorMenu);
+				current = tensorMenu;
+				continue;
+			}
+			if( sText.startsWith("TENSORFLOW_CONT") ) {
+				current = fileMenu;
+				continue;
+			}
             //
 			arMenuItem[k] = new JMenuItem( memShared.makeLabel(sText) );
 			arMenuItem[k].setFont(xfont);
@@ -217,6 +232,10 @@ public class cmcMenuManager {
 		case TESSERACT_VERSION  : { memShared.performCallback("doTesseractVersionDialog"); break; }
 		case IMPORT_TEXT   : { memShared.performCallback("doImportText"); break; }
 		case EXPORT_TEXT   : { memShared.performCallback("doExportText"); break; }
+		case TENSORFLOW_SETTINGS : { memShared.performCallback("doTensorFlowSettings"); break; }
+		case MAKE_TRAINING_SET : { memShared.performCallback("doTensorFlowMakeTrainingSet"); break; }
+		case EXTRACT_SINGLE_SET : { memShared.performCallback("doTensorFlowExtractSingleSet"); break; }
+		case READJUST_TEXTBUBBLES_VIA_TENSORFLOW : 	{ memShared.performCallback("doTensorFlowReadjustment"); break; }
 		//
 		case RECENT1 : { memShared.performCallback("doRecent","0"); break; }
 		case RECENT2 : { memShared.performCallback("doRecent","1"); break; }
@@ -330,6 +349,11 @@ public class cmcMenuManager {
 			setMenuItemStatus( cbrTekStraktorModel.cmcProcEnums.MENU_ITEMS.GENERAL_PROPERTIES , true );
 			setMenuItemStatus( cbrTekStraktorModel.cmcProcEnums.MENU_ITEMS.TESSERACT_OPTIONS , true );
 			setMenuItemStatus( cbrTekStraktorModel.cmcProcEnums.MENU_ITEMS.TESSERACT_VERSION , true );
+			//
+			setMenuItemStatus( cbrTekStraktorModel.cmcProcEnums.MENU_ITEMS.TENSORFLOW_SETTINGS , true );
+			setMenuItemStatus( cbrTekStraktorModel.cmcProcEnums.MENU_ITEMS.MAKE_TRAINING_SET , true );
+			setMenuItemStatus( cbrTekStraktorModel.cmcProcEnums.MENU_ITEMS.EXTRACT_SINGLE_SET , true );
+			setMenuItemStatus( cbrTekStraktorModel.cmcProcEnums.MENU_ITEMS.READJUST_TEXTBUBBLES_VIA_TENSORFLOW , true );
 			//
 			setMenuItemStatus( cbrTekStraktorModel.cmcProcEnums.MENU_ITEMS.RECENT1 , true );
 			setMenuItemStatus( cbrTekStraktorModel.cmcProcEnums.MENU_ITEMS.RECENT2 , true );

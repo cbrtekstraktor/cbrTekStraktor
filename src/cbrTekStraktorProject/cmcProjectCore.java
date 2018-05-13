@@ -26,7 +26,7 @@ public class cmcProjectCore {
     private String preferredLanguageLong = "french";
     private cmcProcEnums.BackdropType backdrop = cmcProcEnums.BackdropType.BLEACHED;
     private cmcProcEnums.BROWSER browser = cmcProcEnums.BROWSER.MOZILLA;
-    
+    private String PythonHomeDir = null;
     //
     private String sErr=null;
     
@@ -37,6 +37,7 @@ public class cmcProjectCore {
 		ProjectFolderName = projdir;
 		ProjectName = projdir;  // default
 		TesseractDir = this.getDefaultTesseractDir();
+		PythonHomeDir = this.getDefaultPythonHomeDir();
 	}
 	
 	//---------------------------------------------------------------------------------
@@ -45,7 +46,14 @@ public class cmcProjectCore {
   	{
   		return ( System.getProperty("file.separator").trim().startsWith("/") ) ? cmcProcConstants.LINUX_TESSERACTHOME : cmcProcConstants.MSDOS_TESSERACTHOME;
   	}
-  	
+
+	//---------------------------------------------------------------------------------
+  	private String getDefaultPythonHomeDir()
+  	//---------------------------------------------------------------------------------
+  	{
+  		return ( System.getProperty("file.separator").trim().startsWith("/") ) ? cmcProcConstants.LINUX_PYTHONHOME : cmcProcConstants.MSDOS_PYTHONHOME;
+  	}
+
     //---------------------------------------------------------------------------------
     //---------------------------------------------------------------------------------
   	public void setProjectFolderName(String s) { ProjectFolderName =s;}    
@@ -65,7 +73,8 @@ public class cmcProjectCore {
 	public void setBackDropType(cmcProcEnums.BackdropType bd) { backdrop= bd; }
 	public void setHorizontalVerticalVarianceThreshold(int i) { HorizontalVerticalVarianceThreshold=i; }
 	public void setBrowser(cmcProcEnums.BROWSER bd) { browser= bd; }
-	
+	public void setPythonHomeDir(String s)      { PythonHomeDir = s; }
+    
     //
 	//---------------------------------------------------------------------------------
 	//---------------------------------------------------------------------------------
@@ -87,7 +96,7 @@ public class cmcProjectCore {
     public String getPreferredLanguageLong()  { return preferredLanguageLong; }
     public cmcProcEnums.BackdropType  getBackDropType() { return backdrop; }   
     public cmcProcEnums.BROWSER getBrowser() { return browser; }
-    		
+    public String getPythonHomeDir()       { return PythonHomeDir; }
     
 	//---------------------------------------------------------------------------------
     public boolean hasValidProjectCharacteristics()
@@ -97,6 +106,7 @@ public class cmcProjectCore {
     	sErr += isEmpty(getProjectFolderName(),"FolderName");
     	sErr += isEmpty(getDateformat(),"Dateformat");
     	sErr += isEmpty(getTesseractDir(),"TesseractFolder");
+    	sErr += isEmpty(getTesseractDir(),"PythonHomeDir");
     	sErr += isEmpty(getPreferredFontName(),"PreferredFont");
     	sErr += isEmpty(getProjectDescription(),"ProjectDescription");
     	sErr += isEmpty(getProjectName(),"ProjetName");

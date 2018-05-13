@@ -120,7 +120,9 @@ public class cmcProjectDAO {
 			sVal = xMSet.xU.extractXMLValue(sLijn,"TesseractFolder"); if ( sVal != null ) {	core.setTesseractDir(sVal.trim());	}
             //
 			sVal = xMSet.xU.extractXMLValue(sLijn,"Browser"); if ( sVal != null ) { reqBrowser=sVal.trim();	}
-
+            //
+			sVal = xMSet.xU.extractXMLValue(sLijn,"PythonFolder"); if ( sVal != null ) { core.setPythonHomeDir(sVal.trim());	}
+			
 		}
 		// Font
 		if( (reqFont !=null) && (reqFontSize>5) && (reqFontSize<20)) {
@@ -146,7 +148,7 @@ public class cmcProjectDAO {
 				do_log(5,"Codepage [" + cp + "]");
 			}
 			else {
-				do_error("Coud not determine requested codepage [" + reqCodepage + "]");
+				do_error("Could not determine requested codepage [" + reqCodepage + "]");
 				isOK=false;
 			}
 		}
@@ -158,7 +160,7 @@ public class cmcProjectDAO {
 				do_log(5,"BackdropType [" + bt + "]");
 			}
 			else {
-				do_error("Coud not determine requested backdrop type [" + reqBackDropType + "]");
+				do_error("Could not determine requested backdrop type [" + reqBackDropType + "]");
 				isOK=false;
 			}
 		}
@@ -237,6 +239,7 @@ public class cmcProjectDAO {
 			cout.println ( "<Encoding>" + proj.getEncoding() + "</Encoding>"); 
 			cout.println ( "<BackDropType>" + proj.getBackDropType() + "</BackDropType>"); 
 			cout.println ( "<TesseractFolder>" + proj.getTesseractDir() + "</TesseractFolder>" );
+			cout.println ( "<PythonFolder>" + proj.getPythonHomeDir() + "</PythonFolder>" );
 			cout.println ( "<Browser>" + proj.getBrowser() + "</Browser>" );
 			//
 			cout.println ( "</Project>" );

@@ -426,6 +426,7 @@ public class cmcProjectDialog {
    	    		case MEAN_CHARACTER_COUNT : ;
    	    		case HORIZONTAL_VERTICAL_VARIANCE_THRESHOLD : ;
    	    		case TESSERACT_FOLDER : ;
+   	    		case PYTHON_FOLDER : ;
    	    		case DATEFORMAT : ;
    	    		case LOGGING_LEVEL : ;
    	    		case PREFERRED_FONT_NAME : ;
@@ -466,6 +467,7 @@ public class cmcProjectDialog {
    	    		case MEAN_CHARACTER_COUNT : ;
    	    		case HORIZONTAL_VERTICAL_VARIANCE_THRESHOLD : ;
    	    		case TESSERACT_FOLDER : ;
+   	    		case PYTHON_FOLDER : ;
    	    		case DATEFORMAT : ;
    	    		case LOGGING_LEVEL : ;
    	    		case PREFERRED_FONT_NAME : ;
@@ -527,6 +529,7 @@ public class cmcProjectDialog {
 	   	 case DESCRIPTION          : { arText[i].setText(""+core.getProjectDescription()); break; } 
 	   	 case MEAN_CHARACTER_COUNT : { arText[i].setText(""+core.getMeanCharacterCount()); break; }
 	   	 case TESSERACT_FOLDER     : { arText[i].setText(core.getTesseractDir()); break; }
+	 	 case PYTHON_FOLDER        : { arText[i].setText(core.getPythonHomeDir()); break; }
 	   	 case PREFERRED_FONT_NAME  : { arText[i].setText(core.getPreferredFontName()); break; }
 	   	 case PREFERRED_FONT_SIZE  : { arText[i].setText(""+core.getPreferredFontSize()); break; }
 	   	 case DATEFORMAT           : { arText[i].setText(core.getDateformat()); break; }
@@ -682,6 +685,7 @@ public class cmcProjectDialog {
 	    		case PROJECT_NAME         : { proj.setProjectName(arText[i].getText()); break; }
 	    		case DESCRIPTION          : { proj.setDescription(arText[i].getText()); break; }
 	    		case TESSERACT_FOLDER     : { proj.setTesseractDir(arText[i].getText()); break; }
+	    		case PYTHON_FOLDER        : { proj.setPythonHomeDir(arText[i].getText()); break; }
 	    		case DATEFORMAT           : { proj.setDateformat(arText[i].getText()); break; }
 	    		case PREFERRED_FONT_NAME  : { proj.setPreferredFontName(arText[i].getText()); break; }
             	case LOGGING_LEVEL        : { proj.setLogLevel(xMSet.xU.NaarInt(arText[i].getText())); break; }
