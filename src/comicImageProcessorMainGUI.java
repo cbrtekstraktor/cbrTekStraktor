@@ -3229,10 +3229,10 @@ public class comicImageProcessorMainGUI {
     	 jc.runDialog();
          String LongFileName = jc.getAbsoluteFilePath();
          if( LongFileName==null ) return;
-         xMSet.createTensorParagraphCheckList(LongFileName);
-      	 int aantal = xMSet.getScanListSize();
+         boolean ib =xMSet.createTensorParagraphCheckList(LongFileName);
+      	 int aantal = (ib == false) ? -1 : xMSet.getScanListSize();
      	 if( aantal <= 0 ) {
-     		popMessage("Archive could not be read [" + LongFileName + "]");
+     		popMessage("Archive could not be read [" + LongFileName + "]\nPlease consult error log" );
      	 }
      	 else {
      		 xMSet.setCurrentArchiveFileName( LongFileName );

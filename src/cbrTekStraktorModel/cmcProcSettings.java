@@ -161,6 +161,12 @@ public class cmcProcSettings {
 		return projman.getLogLevel();
 	}
 	//---------------------------------------------------------------------------------
+	public int getMaxThreads()
+	//---------------------------------------------------------------------------------
+	{
+		return projman.getMaxThreads();
+	}
+	//---------------------------------------------------------------------------------
 	public String getPreferredFontName()
 	//---------------------------------------------------------------------------------
 	{
@@ -431,7 +437,7 @@ public class cmcProcSettings {
         return true;
 	}
 	//---------------------------------------------------------------------------------
-	public void createTensorParagraphCheckList(String LongFName)
+	public boolean createTensorParagraphCheckList(String LongFName)
 	//---------------------------------------------------------------------------------
 	{
 			scanList=null;
@@ -451,8 +457,8 @@ public class cmcProcSettings {
 	    	  scanList.get(0).setEndtime(System.currentTimeMillis());
 	      	  scanList.get(0).setProcessed(true);
 	      	  scanList.get(0).setComment("Failed");
-		      if( mlist == null ) return;
-	    	  if( mlist.size() == 0 ) return;
+		      if( mlist == null ) return false;
+	    	  if( mlist.size() == 0 ) return false;
 	    	  ArrayList<cmcVRParagraph> plist = mlist.get(0).getplist();
 	    	  int ncnt = ( plist == null ) ? 0 : plist.size();
 	      	  scanList.get(0).setComment("[" + ncnt + "] images extracted in [" + ((System.currentTimeMillis()-scanList.get(0).getStarttime())/1000L) + "] seconds");
@@ -470,6 +476,7 @@ public class cmcProcSettings {
 	      	  }
 	    	}
 	        ms=null;
+	        return ib;
 	}
 
 	//---------------------------------------------------------------------------------
@@ -505,22 +512,48 @@ public class cmcProcSettings {
 		return null;
 	}
 	//---------------------------------------------------------------------------------
+	private boolean setStartEndTimeOnScanList(String BulkFileName , int tipe , long tt)
+	//---------------------------------------------------------------------------------
+	{
+		    long tset = ( tt <= 0L ) ? System.currentTimeMillis() : tt; 
+			if( scanList == null ) return false;
+			if( scanList.size() == 0 ) return false;
+			for(int i=0;i<scanList.size();i++)
+			{ 
+				String FName =scanList.get(i).getFileName();
+				if( FName == null ) continue;
+				if( FName.compareToIgnoreCase(BulkFileName) == 0 ) {
+					if( tipe == 0 ) scanList.get(i).setStarttime(tset);
+					if( tipe == 1 ) scanList.get(i).setEndtime(tset);
+					return true;
+				}
+			}
+			return false;
+	}
+	//---------------------------------------------------------------------------------
+	public boolean setStartTimeOnScanList(String BulkFileName)
+	//---------------------------------------------------------------------------------
+	{
+		return setStartEndTimeOnScanList( BulkFileName , 0 , -1L);
+	}
+
+	//---------------------------------------------------------------------------------
 	public boolean setEndTimeOnScanList(String BulkFileName)
 	//---------------------------------------------------------------------------------
 	{
-		if( scanList == null ) return false;
-		if( scanList.size() == 0 ) return false;
-		for(int i=0;i<scanList.size();i++)
-		{ 
-			String FName =scanList.get(i).getFileName();
-			if( FName == null ) continue;
-			//FName = 
-			if( FName.compareToIgnoreCase(BulkFileName) == 0 ) {
-				scanList.get(i).setEndtime(System.currentTimeMillis());
-				return true;
-			}
-		}
-		return false;
+		return setStartEndTimeOnScanList( BulkFileName , 1 , -1L);
+	}
+	//---------------------------------------------------------------------------------
+	public boolean setStartTimeOnScanList(String BulkFileName , long tt)
+	//---------------------------------------------------------------------------------
+	{
+		return setStartEndTimeOnScanList( BulkFileName , 0 , tt);
+	}
+	//---------------------------------------------------------------------------------
+	public boolean setEndTimeOnScanList(String BulkFileName , long tt)
+	//---------------------------------------------------------------------------------
+	{
+		return setStartEndTimeOnScanList( BulkFileName , 1 , tt);
 	}
 	//
 	//---------------------------------------------------------------------------------
@@ -579,11 +612,14 @@ public class cmcProcSettings {
 				if( FName == null ) continue;
 				if( FName.compareToIgnoreCase(BulkFileName) == 0 ) {
 					scanList.get(i).setObject(obj);
+		//do_error( "SET => " + obj.toString() );
 					return true;
 				}
 			}
 			return false;
 	}
+	
+
 	//---------------------------------------------------------------------------------
 	public ArrayList<cmcMonitorItem> getMonitorList()
 	//---------------------------------------------------------------------------------
@@ -1225,7 +1261,7 @@ public class cmcProcSettings {
 	public void setCurrentArchiveFileName(String fn)
 	//---------------------------------------------------------------------------------
 	{
-		currentArchiveFileName = fn.trim();
+		currentArchiveFileName = (fn == null) ? null : fn.trim();
 	}
 	//---------------------------------------------------------------------------------
 	public String getCurrentArchiveFileName()

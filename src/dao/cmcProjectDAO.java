@@ -104,6 +104,9 @@ public class cmcProjectDAO {
 			//
 			sVal = xMSet.xU.extractXMLValue(sLijn,"Updated"); 
 			if ( sVal != null ) { long k = xMSet.xU.NaarLong(sVal); if ( k>0L ) core.setUpdated(k); do_log(9,"Updated [" + k + "]");	}
+			//
+			sVal = xMSet.xU.extractXMLValue(sLijn,"MaximumNumberOfThreads"); 
+			if ( sVal != null ) {	int k = xMSet.xU.NaarInt(sVal); if ( (k>0) && (k<30) ) core.setMaxThreads(k); do_log(9,"MaxThreads [" + k + "]");	}
 			
 			
 			// Font
@@ -240,6 +243,7 @@ public class cmcProjectDAO {
 			cout.println ( "<BackDropType>" + proj.getBackDropType() + "</BackDropType>"); 
 			cout.println ( "<TesseractFolder>" + proj.getTesseractDir() + "</TesseractFolder>" );
 			cout.println ( "<PythonFolder>" + proj.getPythonHomeDir() + "</PythonFolder>" );
+			cout.println ( "<MaximumNumberOfThreads>" + proj.getMaxThreads() + "</MaximumNumberOfThreads>" );
 			cout.println ( "<Browser>" + proj.getBrowser() + "</Browser>" );
 			//
 			cout.println ( "</Project>" );

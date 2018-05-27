@@ -131,6 +131,7 @@ public class cmcProjectWrapper {
 	public void setHorizontalVerticalVarianceThreshold(int i) { core.setHorizontalVerticalVarianceThreshold(i); }
     public void setEncoding(cmcProcEnums.ENCODING cp)         { core.setEncoding(cp); }
     public void setBrowser(cmcProcEnums.BROWSER br) { core.setBrowser(br); }
+    public void setMaxThreads(int i)             { core.setMaxThreads(i); }
     
 	//------------------------------------------------------------
 	//------------------------------------------------------------
@@ -149,9 +150,10 @@ public class cmcProjectWrapper {
     public int getHorizontalVerticalVarianceThreshold() { return core.getHorizontalVerticalVarianceThreshold(); }
     public long getProjectCreationTime()                { return core.getCreated(); }
     public long getProjectModificationTime()            { return core.getUpdated(); }
-    public String getPreferredLanguageLong()                { return core.getPreferredLanguageLong(); }
-    public cmcProcEnums.BackdropType getBackDropType() { return core.getBackDropType(); }
-    public cmcProcEnums.BROWSER getBrowser() { return core.getBrowser(); }
+    public String getPreferredLanguageLong()            { return core.getPreferredLanguageLong(); }
+    public cmcProcEnums.BackdropType getBackDropType()  { return core.getBackDropType(); }
+    public cmcProcEnums.BROWSER getBrowser()            { return core.getBrowser(); }
+    public int getMaxThreads()                          { return core.getMaxThreads(); }
     
     //---  internal
     public long getSize() { return this.size; }

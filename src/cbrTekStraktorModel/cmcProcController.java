@@ -305,14 +305,14 @@ public class cmcProcController extends SwingWorker<Integer, Integer> {
                 break;
                 }
             case TENSORFLOW_MAKE_TRAINING_SET : {
-            	tensorflow_make_training_set();
-            	cSema.setSemaphore(taskTipe); 
-            	taskTipe = cmcProcSemaphore.TaskType.DO_NOTHING; 
+            	if( tensorflow_make_training_set() ) cSema.setSemaphore(taskTipe); 
+            	else cSema.setSemaphore(cmcProcSemaphore.TaskType.SHOUT); // skips the rest
+               taskTipe = cmcProcSemaphore.TaskType.DO_NOTHING; 
                 break;
                 }
             case TENSORFLOW_MAKE_SINGLE_SET : {
-            	tensorflow_make_single_set();
-            	cSema.setSemaphore(taskTipe); 
+            	if( tensorflow_make_single_set() ) cSema.setSemaphore(taskTipe);
+            	else cSema.setSemaphore(cmcProcSemaphore.TaskType.SHOUT); // skips the rest
             	taskTipe = cmcProcSemaphore.TaskType.DO_NOTHING; 
                 break;
                 }
@@ -1007,20 +1007,22 @@ public class cmcProcController extends SwingWorker<Integer, Integer> {
 	}
 	
 	//-----------------------------------------------------------------------
-	private void tensorflow_make_training_set()
+	private boolean tensorflow_make_training_set()
 	//-----------------------------------------------------------------------
 	{
 	 	cmcVRMakeTrainingImages ms = new cmcVRMakeTrainingImages( xMSet , logger );
-    	ms.make_training_set_via_monitor();
+    	boolean ib = ms.make_training_set_via_monitor();
     	ms = null;
+    	do_error(" stat >> " + ib);
+    	return ib;
     }
 
 	//-----------------------------------------------------------------------
-	private void tensorflow_make_single_set()
+	private boolean tensorflow_make_single_set()
 	//-----------------------------------------------------------------------
 	{
 		// check whether it is only required to extract the files
-		if( xMSet.getTensorFlowPostProcessIndicator() == false ) return;
+		if( xMSet.getTensorFlowPostProcessIndicator() == false ) return false;
 		// run tensorflow visual recognition
 		xMSet.setOCRSummaryResult(null);
 		cmcVRRunTensorFlow vr = new cmcVRRunTensorFlow(xMSet,logger);
@@ -1033,6 +1035,7 @@ public class cmcProcController extends SwingWorker<Integer, Integer> {
 		}
 		if( ib == false ) xMSet.setOCRSummaryResult(vr.getErrorMessage());
 		vr=null;
+		return ib;
 	}
 
 }

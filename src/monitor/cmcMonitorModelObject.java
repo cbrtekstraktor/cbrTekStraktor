@@ -59,7 +59,7 @@ public class cmcMonitorModelObject {
 	{
 		if( mlist == null )  mlist = new ArrayList<cmcMonitorItem>();
         int idx = getMonitorItemIdx( imon.getUID() );
-        //do_error("Got " + imon.getFileName() + " " + imon.getUID() + " " + idx);
+       //do_error("Got " + imon.getFileName() + " " + imon.getUID() + " " + idx);
         if( idx < 0 ) {
         	cmcMonitorItem x = new cmcMonitorItem( lcounter++ );
         	x.setUID( imon.getUID());
@@ -77,6 +77,7 @@ public class cmcMonitorModelObject {
         	mlist.get(idx).setEndtime( imon.getEndtime());
         	mlist.get(idx).setComment( imon.getComment());
         	mlist.get(idx).setProcessed( imon.getProcessed());
+     //do_error("UPdate " + mlist.get(idx).getFileName() + " " + mlist.get(idx).getProcessed() + " " + mlist.get(idx).getComment());
         }
      	return true;
 	}

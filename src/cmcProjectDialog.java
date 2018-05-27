@@ -429,6 +429,7 @@ public class cmcProjectDialog {
    	    		case PYTHON_FOLDER : ;
    	    		case DATEFORMAT : ;
    	    		case LOGGING_LEVEL : ;
+   	    		case MAXIMUM_NUMBER_OF_THREADS : ;
    	    		case PREFERRED_FONT_NAME : ;
    	    		case PREFERRED_FONT_SIZE : { arText[i].setEnabled(true); break; }
    	    		//
@@ -470,6 +471,7 @@ public class cmcProjectDialog {
    	    		case PYTHON_FOLDER : ;
    	    		case DATEFORMAT : ;
    	    		case LOGGING_LEVEL : ;
+   	    		case MAXIMUM_NUMBER_OF_THREADS : ;
    	    		case PREFERRED_FONT_NAME : ;
    	    		case PREFERRED_FONT_SIZE : { arText[i].setEnabled(true); break; }
    	    		//
@@ -534,6 +536,7 @@ public class cmcProjectDialog {
 	   	 case PREFERRED_FONT_SIZE  : { arText[i].setText(""+core.getPreferredFontSize()); break; }
 	   	 case DATEFORMAT           : { arText[i].setText(core.getDateformat()); break; }
 	   	 case LOGGING_LEVEL        : { arText[i].setText(""+core.getLogLevel()); break; }
+   	     case MAXIMUM_NUMBER_OF_THREADS : { arText[i].setText(""+core.getMaxThreads()); break; }
 	   	 case SIZE                 : { arText[i].setText(""+wrapper.getSize() + " Bytes"); break; }
 	   	 case NUMBER_OF_ARCHIVES   : { arText[i].setText(""+wrapper.getNumberOfArchives() + "/" + wrapper.getNumberOfFiles()); break; }
 	   	 case FIRST_ACCESSED       : { arText[i].setText(""+xMSet.xU.prntDateTimeISODate(wrapper.getFirstAccessed(),core.getDateformat())); break; }
@@ -689,6 +692,7 @@ public class cmcProjectDialog {
 	    		case DATEFORMAT           : { proj.setDateformat(arText[i].getText()); break; }
 	    		case PREFERRED_FONT_NAME  : { proj.setPreferredFontName(arText[i].getText()); break; }
             	case LOGGING_LEVEL        : { proj.setLogLevel(xMSet.xU.NaarInt(arText[i].getText())); break; }
+            	case MAXIMUM_NUMBER_OF_THREADS : { proj.setMaxThreads(xMSet.xU.NaarInt(arText[i].getText())); break; }
 		    	case MEAN_CHARACTER_COUNT : { proj.setMeanCharacterCount(xMSet.xU.NaarInt(arText[i].getText())); break; }
 	    		case PREFERRED_FONT_SIZE  : { proj.setPreferredFontSize(xMSet.xU.NaarInt(arText[i].getText())); break; }
 	    		case HORIZONTAL_VERTICAL_VARIANCE_THRESHOLD : { proj.setHorizontalVerticalVarianceThreshold(xMSet.xU.NaarInt(arText[i].getText())); break; }
@@ -785,6 +789,7 @@ public class cmcProjectDialog {
     	boolean isOK=true;
     	String sErr="";
     	cmcProjectCore proj = grabProjectCoreCharacteristics();
+    	
     	// overrule values not displayed
     	proj.setCreated(SuperCreated);
     	//
@@ -795,8 +800,8 @@ public class cmcProjectDialog {
 		}
     	if( isOK ) {
     	  if( xMSet.xU.IsDir( proj.getProjectFolderName() ) == true ) {
-    		  // overwrite
-    		   cmcProjectDAO dao = new cmcProjectDAO(xMSet,logger);
+    		   // overwrite
+               cmcProjectDAO dao = new cmcProjectDAO(xMSet,logger);
 	           isOK = dao.writeConfig(proj);
 	           dao=null;
 	           sErr += "Error while writing configuration XML in [" + proj.getProjectFolderName() + "]";

@@ -110,6 +110,7 @@ public class cbrTekStraktorProjectManager {
     public String getPreferredFontName() { return currProj.getPreferredFontName();}
     public int getPreferredFontSize()    { return currProj.getPreferredFontSize(); }
     public int getLogLevel()             { return currProj.getLogLevel(); }
+    public int getMaxThreads()           { return currProj.getMaxThreads(); }
     public int getHorizontalVerticalVarianceThreshold() { return currProj.getHorizontalVerticalVarianceThreshold(); }
     public cmcProcEnums.ENCODING getEncoding()          { return currProj.getEncoding(); }
     public cmcProcEnums.BROWSER getBrowser() { return currProj.getBrowser(); }

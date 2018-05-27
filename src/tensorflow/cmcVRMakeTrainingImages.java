@@ -115,6 +115,7 @@ public class cmcVRMakeTrainingImages {
 		 cmcVRArchive x = new cmcVRArchive(ShortArchiveFileName);
 		 moniList.add(x);
 		 boolean ib = make_set_from_zip( x );
+		 //do_error( "OK 2" + ib );
 		 do_log(9,"[" + FileCounter + "] images created in [" + ((System.currentTimeMillis() - startt) / 1000L) + "] seconds [Stat=" + ib + "]");
 		 return ib;
 	}
@@ -153,6 +154,7 @@ public class cmcVRMakeTrainingImages {
 		for(int i=0; i<moniList.size(); i++)
 		{
 			ok = make_set_from_zip( moniList.get(i) );
+			//do_error( "OK 1" + ok );
 			moniList.get(i).setStopt ( System.currentTimeMillis() );
 			if( !ok ) break;
 		}
@@ -177,6 +179,7 @@ public class cmcVRMakeTrainingImages {
 	public boolean make_training_set_via_monitor()
 	//------------------------------------------------------------
 	{
+		boolean ok=true;
 		operating_mode = OPERATING_MODE.MAKE_TRAINING_SET;
 		FileCounter=0;
 		FileAttempts=0;
@@ -194,7 +197,8 @@ public class cmcVRMakeTrainingImages {
 		  cmcVRArchive x = new cmcVRArchive( ShortArchiveName );
 		  moniList.add( x );
           //
-		  boolean ok = make_set_from_zip( moniList.get(moniList.size()-1) );
+		  ok = make_set_from_zip( moniList.get(moniList.size()-1) );
+		  //do_error( "OK 3" + ok );
 		  moniList.get(moniList.size()-1).setStopt(System.currentTimeMillis());
 		  if( ok == false ) break;
 		  int nfi= moniList.get(moniList.size()-1).getplist() == null ? 0 : moniList.get(moniList.size()-1).getplist().size();
@@ -208,7 +212,7 @@ public class cmcVRMakeTrainingImages {
 		long stopt = System.currentTimeMillis();
 		int perc = (int)((double)FileCounter * (double)100 / (double)FileAttempts);
 		do_log(9,"Training set of [" + FileCounter + "] images created out of [" + FileAttempts + "] attemps in [" + ((stopt - startt) / 1000L) + "] seconds [Hits=" + perc + "%]");
-		return true;
+		return ok;
 	}
 	
 	//------------------------------------------------------------
@@ -228,7 +232,7 @@ public class cmcVRMakeTrainingImages {
         // load the image
         String OriginalImageName = dao.getOrigFileDir() + xMSet.xU.ctSlash + dao.getOrigFileName();
         if( xMSet.xU.IsBestand( OriginalImageName ) == false ) {
-        	do_error("Cannot stat image [" + OriginalImageName + "]");
+        	do_error("Could not find image [" + OriginalImageName + "]");
         	return false;
         }
         gpLoadImageInBuffer lo = new gpLoadImageInBuffer( xMSet.xU , logger );

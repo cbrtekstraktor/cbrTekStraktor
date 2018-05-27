@@ -27,6 +27,7 @@ public class cmcProjectCore {
     private cmcProcEnums.BackdropType backdrop = cmcProcEnums.BackdropType.BLEACHED;
     private cmcProcEnums.BROWSER browser = cmcProcEnums.BROWSER.MOZILLA;
     private String PythonHomeDir = null;
+    private int MaxThreads = 5;
     //
     private String sErr=null;
     
@@ -74,6 +75,7 @@ public class cmcProjectCore {
 	public void setHorizontalVerticalVarianceThreshold(int i) { HorizontalVerticalVarianceThreshold=i; }
 	public void setBrowser(cmcProcEnums.BROWSER bd) { browser= bd; }
 	public void setPythonHomeDir(String s)      { PythonHomeDir = s; }
+	public void setMaxThreads(int i)             { MaxThreads=i; }
     
     //
 	//---------------------------------------------------------------------------------
@@ -97,6 +99,7 @@ public class cmcProjectCore {
     public cmcProcEnums.BackdropType  getBackDropType() { return backdrop; }   
     public cmcProcEnums.BROWSER getBrowser() { return browser; }
     public String getPythonHomeDir()       { return PythonHomeDir; }
+    public int getMaxThreads()             { return MaxThreads; }
     
 	//---------------------------------------------------------------------------------
     public boolean hasValidProjectCharacteristics()
@@ -115,6 +118,7 @@ public class cmcProjectCore {
         sErr += ( (getMeanCharacterCount() < 100) || ((getMeanCharacterCount() > 800)) ) ? "Unsupported Mean Character Count\n" : "";
         sErr += ( (getPreferredFontSize() < 5) || ((getPreferredFontSize() > 20)) ) ? "Unsupported Fontsize\n" : "";
         sErr += ( (getLogLevel() < 0) || ((getLogLevel() > 9)) ) ? "Unsupported loglevel\n" : "";
+        sErr += ( (getMaxThreads() < 0) || ((getMaxThreads() > 30)) ) ? "Unsupported number of threads\n" : "";
         sErr += ( (getHorizontalVerticalVarianceThreshold() < 0) || ((getHorizontalVerticalVarianceThreshold() > 20)) ) ? "Wrong variance" : "";
         // advanced checks
         try {

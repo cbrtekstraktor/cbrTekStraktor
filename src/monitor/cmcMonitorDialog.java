@@ -40,6 +40,7 @@ public class cmcMonitorDialog {
     logLiason          logger=null;
     cmcMonitorModel    MyScanModel   = null;
     
+    private static JDialog dialog = null;
     JScrollPane frmComicScrollPane;
 	JTable frmComicScannerTable;
 	JPanel onderPane;
@@ -87,15 +88,21 @@ public class cmcMonitorDialog {
 		//
 		initialize(jf);
 	}
-	
 
-	  //-----------------------------------------------------------------------
-	  	private void initialize(JFrame jf)
-	  	//-----------------------------------------------------------------------
-	  	{
+    //-----------------------------------------------------------------------
+	public void setTitle(String s)
+    //-----------------------------------------------------------------------
+	{
+		if( dialog != null ) dialog.setTitle("Bulk Processor Monitor " + s);
+	}
+
+    //-----------------------------------------------------------------------
+  	private void initialize(JFrame jf)
+  	//-----------------------------------------------------------------------
+  	{
 	  	
 	  		try {
-	  			    final JDialog dialog = new JDialog(jf,"",Dialog.ModalityType.MODELESS);  // final voor de dispose   
+	  			    dialog = new JDialog(jf,"",Dialog.ModalityType.MODELESS);  // final voor de dispose   
 	  	            dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 	  	            dialog.setTitle("Bulk Processor Monitor " + blkFolderName );
 	  	            dialog.setLocationRelativeTo( jf );
