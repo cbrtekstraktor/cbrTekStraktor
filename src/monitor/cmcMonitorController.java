@@ -49,20 +49,20 @@ public class cmcMonitorController {
 	//-----------------------------------------------------------------------
 	{
 		if( BulkFileName == null ) return;
-		if( xMSet.setEndTimeOnScanList(BulkFileName) ) syncMonitor();
+		if( xMSet.getmoma().setEndTimeOnScanList(BulkFileName) ) syncMonitor();
 	}
 	//-----------------------------------------------------------------------
 	public void syncMonitorComment(String BulkFileName,String Comment)
 	//-----------------------------------------------------------------------
 	{
 			if( (BulkFileName == null) || (Comment == null)  ) return;
-			if( xMSet.setCommentOnScanList(BulkFileName , Comment) ) syncMonitor();
+			if( xMSet.getmoma().setCommentOnScanList(BulkFileName , Comment) ) syncMonitor();
 	}
 	//-----------------------------------------------------------------------
 	public void syncMonitor()
 	//-----------------------------------------------------------------------
 	{
-		ArrayList<cmcMonitorItem> pl = xMSet.getMonitorList();
+		ArrayList<cmcMonitorItem> pl = xMSet.getmoma().getMonitorList();
 	    try {
 		  if( monitorHandle == null ) return;
 		  if( monitorHandle.hasBeenClosed() ) return;

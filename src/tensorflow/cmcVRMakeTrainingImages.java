@@ -189,10 +189,10 @@ public class cmcVRMakeTrainingImages {
 		//
 		cmcMonitorController moni = new cmcMonitorController(xMSet,logger);
 		moni.startMonitor(xMSet.getExportFileName());
-     	int maxiter = xMSet.getScanListSize();
+     	int maxiter = xMSet.getmoma().getScanListSize();
    	    for(int iter=0;iter<maxiter;iter++)
 		{
-		  String ShortArchiveName = xMSet.popScanListItem();  // also sets the starttime
+		  String ShortArchiveName = xMSet.getmoma().popScanListItem();  // also sets the starttime
 		  if( ShortArchiveName == null ) continue;
 		  cmcVRArchive x = new cmcVRArchive( ShortArchiveName );
 		  moniList.add( x );

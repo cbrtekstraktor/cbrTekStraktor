@@ -6,7 +6,7 @@ public class cmcProcConstants {
 	
 	public static String Application = "cbrTekStraktor";
 	public static String Version = "V0.4";
-	public static String Build = "27-May-2018";
+	public static String Build = "02-Jun-2018";
 	public static long   ExportFormatVersion = 20170601;    // used to detect incompatible export files
 	
 	public static int   QUICKEDITBORDER = 18;

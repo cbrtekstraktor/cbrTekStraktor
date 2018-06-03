@@ -53,10 +53,10 @@ public class cmcVRPublishResults {
     // ---------------------------------------------------------------------------------
   	{
   		int cnt=0;
-		int iter= xMSet.getScanListSize();
+		int iter= xMSet.getmoma().getScanListSize();
 		for(int i=0;i<iter;i++)
 		{
-		  cmcVRParagraph obj = (cmcVRParagraph)xMSet.getObjectFromScanList(i);
+		  cmcVRParagraph obj = (cmcVRParagraph)xMSet.getmoma().getObjectFromScanList(i);
 		  if( obj.hasTipeChanged() ) cnt++;
 		}
   		return cnt;
@@ -91,10 +91,10 @@ public class cmcVRPublishResults {
         }
         // merge changes
         boolean ok=true;
-    	int iter= xMSet.getScanListSize();
+    	int iter= xMSet.getmoma().getScanListSize();
 		for(int i=0;i<iter;i++)
 		{
-		  cmcVRParagraph obj = (cmcVRParagraph)xMSet.getObjectFromScanList(i);
+		  cmcVRParagraph obj = (cmcVRParagraph)xMSet.getmoma().getObjectFromScanList(i);
           //do_log(1,"" + obj.getUID() + " " + obj.getTipe() + " " + obj.getNewTipe() + " " + obj.getConfidence() + " " + obj.hasTipeChanged() );
 		  if( obj.hasTipeChanged() == false ) continue;
 		  if( updateParagraph( obj ) == false ) return false;

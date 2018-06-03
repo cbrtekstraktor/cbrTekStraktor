@@ -10,7 +10,7 @@ import logger.logLiason;
 
 public class cmcVRExecTensorFlowScript {
 	
-	private static boolean SIMULATOR = false;
+	
 	
 	cmcProcSettings xMSet=null;
 	logLiason logger=null;
@@ -110,7 +110,7 @@ public class cmcVRExecTensorFlowScript {
  	   script.println("SET IMAGEFILENAME=\"" + resp.getImageFileName() + "\"");
  	   //
  	   script.println("CD %TNSRDIR%");
- 	   if( SIMULATOR ) {
+ 	   if( xMSet.TENSOR_SIMULATOR ) {
  		 script.println("ECHO --[CBRTEKSTRAKTOR START]--");
  		 script.println("ECHO validbubble (score = 0." + System.currentTimeMillis() % 4389 + " )--");
  		 script.println("ECHO invalidbubble ( score = 0." + System.currentTimeMillis() % 7823 + " )--");
@@ -187,7 +187,20 @@ public class cmcVRExecTensorFlowScript {
         if( ParseResults( exec.getSTDOUT() ) == false ) return false;
         //
         resp.setExitStatus(true);
+        // if simulator - ease up a bit
+        if( xMSet.TENSOR_SIMULATOR ) sleep(250);
+        //
   		return true;
+ 	}
+ 
+	//---------------------------------------------------------------------------------
+ 	private void sleep(long lt)
+	//---------------------------------------------------------------------------------
+ 	{
+ 		try  {
+ 			Thread.sleep(lt);
+ 		}
+ 		catch(Exception e) { return; }
  	}
  	
  	//---------------------------------------------------------------------------------

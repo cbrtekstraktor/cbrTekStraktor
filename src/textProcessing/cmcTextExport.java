@@ -48,6 +48,7 @@ public class cmcTextExport {
  	public boolean exportAllText()
     // ---------------------------------------------------------------------------------
  	{
+ 	  try {
  		boolean isOK = true;
  		cmcMonitorController moni = new cmcMonitorController(xMSet,logger);
 		moni.startMonitor(xMSet.getScanFolder());
@@ -59,10 +60,10 @@ public class cmcTextExport {
 		//
 		openReport();
 		// Loop through the selected archives and see whether there is one in temp
-		int maxiter = xMSet.getScanListSize();
+		int maxiter = xMSet.getmoma().getScanListSize();
 		for(int iter=0;iter<maxiter;iter++)
 		{
-		  String ArchiveFileName = xMSet.popScanListItem();  // also sets the starttime
+		  String ArchiveFileName = xMSet.getmoma().popScanListItem();  // also sets the starttime
  		  if( ArchiveFileName == null ) break;
  		  moni.syncMonitor();
  		  if( extractTextFromArchive(ArchiveFileName) == false ) { isOK=false; break; }
@@ -73,6 +74,12 @@ public class cmcTextExport {
 		xMSet.purgeDirByName(xMSet.getTempDir(),false);
 		closeReport();
 		return isOK;
+ 	  }
+ 	  catch(Exception e ) {
+ 			do_error("Error exporting text" + e.getMessage() );
+ 			e.printStackTrace();
+ 			return false;
+ 	  }
  	}
 
     // ---------------------------------------------------------------------------------

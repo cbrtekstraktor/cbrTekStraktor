@@ -83,6 +83,10 @@ import bubbleProcessing.cmcBubbleMaker;
 
 
 public class comicImageProcessorMainGUI {
+
+	
+	private boolean INCLUDE_TENSOR = false;
+
 	
 	private JFrame frame;
     private JPanel imgPanel;
@@ -290,7 +294,8 @@ public class comicImageProcessorMainGUI {
 	            */
 	        }
 	    });
-		frame.setBounds(xMSet.startX, xMSet.startY, xMSet.startW, xMSet.startH);
+		//frame.setBounds(xMSet.startX, xMSet.startY, xMSet.startW, xMSet.startH);
+		frame.setBounds( xMSet.mainframe );
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.getContentPane().setLayout(null);
 		frame.setFont(xfont);
@@ -900,7 +905,7 @@ public class comicImageProcessorMainGUI {
 				 }
 			     if( (scanMode==true) && (runCompleted==true)) {
 			    	 if( sema == cmcProcSemaphore.TaskType.DO_NOTHING) {
-			    		 BulkFileName = xMSet.popScanListItem();  // also set start
+			    		 BulkFileName = xMSet.getmoma().popScanListItem();  // also set start
 			    		 if( BulkFileName != null ) {
 			    			 // fire the monitor
 			    			 syncMonitor();
@@ -946,11 +951,35 @@ public class comicImageProcessorMainGUI {
 			     		 case DO_PREPROCESS : { doe_dialoog(); doe_grijs(); break; }
 			     		 case DO_GRAYSCALE  : { doe_binarize(); break; }
 			     		 case DO_BINARIZE   : { doe_cc(); break; }
-			     		 case DO_CONNECTEDCOMPONENT : { runCompleted=true; enable_controls(cbrTekStraktorModel.cmcProcEnums.APPLICATION_STATE.EXTRACTED); lastImageFileName=null; timeStat.setEndToEnd(ctrl.getActualEndToEndTime()); syncMonitorEnd(); break; }
+			     		 case DO_CONNECTEDCOMPONENT : {
+			     			 if( INCLUDE_TENSOR == false ) {
+			     			    runCompleted=true; 
+			     			    enable_controls(cbrTekStraktorModel.cmcProcEnums.APPLICATION_STATE.EXTRACTED); 
+			     			    lastImageFileName=null; 
+			     			    timeStat.setEndToEnd(ctrl.getActualEndToEndTime()); 
+			     			    syncMonitorEnd(); 
+			     			 }
+			     			 else {  // run the TensorFlow postprocess
+			     	 			timeStat.setEndToEnd(ctrl.getActualEndToEndTime()); 
+			     	 			syncMonitorEnd();
+			     	 			xMSet.getmoma().putMonitorOnStack();
+				     			do_TensorFlow_PostProcess();
+			     			 }
+			     			 break; }
+			     		 //
 			     		 case PREPARE_OCR   : { enable_controls(cbrTekStraktorModel.cmcProcEnums.APPLICATION_STATE.OCR_BUSY); doe_show_ocr_file(); break; }
 			     		 case EDIT_OCR_FILE : { doe_tesseract(); break; }
 			     		 case SHOW_OCR_FILE : { ask_tesseractoption(); break; }
-			     		 case RUN_TESSERACT : { process_ocr_result(); runCompleted=true; syncMonitorEnd(); enable_controls(cbrTekStraktorModel.cmcProcEnums.APPLICATION_STATE.IDLE); break; } 
+			     		 case RUN_TESSERACT : { process_ocr_result(); runCompleted=true; syncMonitorEnd(); enable_controls(cbrTekStraktorModel.cmcProcEnums.APPLICATION_STATE.IDLE); break; }
+			     		 //
+			     		 case TENSORFLOW_POSTPROC : {
+			   			  runCompleted=true; 
+		     			  enable_controls(cbrTekStraktorModel.cmcProcEnums.APPLICATION_STATE.EXTRACTED); 
+		     			  lastImageFileName=null; 
+		     			  syncMonitorEnd(); 
+		     	 		  xMSet.getmoma().popMonitorFromStack();
+		     			  break;
+		         		 }
 			     		 default : { do_error("Wrong status in robot mode [" + sema + "]"); break; }
 			     		 }
 			     	 }
@@ -1011,8 +1040,14 @@ public class comicImageProcessorMainGUI {
 			     */
 			     // if pbar visible then display progress
 			     if( pbar.isVisible() == true ) {
-			    	 String sVal = timeStat.getRunTiming();
-                     pbar.setValue(maakIval(sVal,pbar.getValue())); // extracts percentage
+			    	 String sVal = "?";
+			    	 if( xMSet.getmoma().isThereABulkProcessRunning() ) {
+			    		 sVal = xMSet.getmoma().estimateCompletionTime(true);
+				     }
+			    	 else {
+			    	  sVal = timeStat.getRunTiming();
+			    	 }
+			         pbar.setValue(maakIval(sVal,pbar.getValue())); // extracts percentage
                      pbar.setStringPainted(true);
                      pbar.setString(sVal);
 			     }
@@ -1638,8 +1673,8 @@ public class comicImageProcessorMainGUI {
 				return;
 			}
 			// scan list and monitor
-			xMSet.createScanList(sDir);
-			int aantal = xMSet.getScanListSize();
+			xMSet.getmoma().createScanList(sDir);
+			int aantal = xMSet.getmoma().getScanListSize();
 			if( aantal <= 0 ) {
 				this.scanCheckBox.setSelected(false);
 				popMessage("There are no valid graphical files present in folder [" + sDir + "]");
@@ -2516,8 +2551,8 @@ public class comicImageProcessorMainGUI {
 				popMessage("[" + sDir + "] is not a valid folder");
 				return;
 			}
-			xMSet.createOCRScanList(sDir);
-			int aantal = xMSet.getScanListSize();
+			xMSet.getmoma().createOCRScanList(sDir);
+			int aantal = xMSet.getmoma().getScanListSize();
 			if( aantal <= 0 ) {
 				this.scanCheckBox.setSelected(false);
 				popMessage("There are no valid archive files present in folder [" + sDir + "]");
@@ -2784,7 +2819,7 @@ public class comicImageProcessorMainGUI {
 	//-----------------------------------------------------------------------
 	{
     	Rectangle r = frame.getBounds();
-    	xMSet.writePropertiesFile(r.x,r.y,r.width,r.height, arFileStack );
+    	xMSet.writePropertiesFile( r , arFileStack );
     	// purge
     	xMSet.purgeDirByName(xMSet.getTempDir(),true);
     	// loggers
@@ -3075,8 +3110,8 @@ public class comicImageProcessorMainGUI {
     		popMessage("[" + sDir + "] is not a valid folder");
     		return;
     	}
-    	xMSet.createOCRScanList(sDir);
-    	int aantal = xMSet.getScanListSize();
+    	xMSet.getmoma().createOCRScanList(sDir);
+    	int aantal = xMSet.getmoma().getScanListSize();
     	if( aantal <= 0 ) {
     		this.scanCheckBox.setSelected(false);
     		popMessage("There are no valid archive files present in folder [" + sDir + "]");
@@ -3145,8 +3180,8 @@ public class comicImageProcessorMainGUI {
     	}
         //do_error( sFile ) ;
         //
-        xMSet.createImportScanList(sFile);
-    	int aantal = xMSet.getScanListSize();
+        xMSet.getmoma().createImportScanList(sFile);
+    	int aantal = xMSet.getmoma().getScanListSize();
     	if( aantal <= 0 ) {
     		this.scanCheckBox.setSelected(false);
     		popMessage("There are no valid archive files present in file [" + sFile + "]");
@@ -3195,8 +3230,8 @@ public class comicImageProcessorMainGUI {
   	public void doTensorFlowMakeTrainingSet()
   	//-----------------------------------------------------------------------
   	{
-  		xMSet.createTensorTrainingSetList();
-     	int aantal = xMSet.getScanListSize();
+  		xMSet.getmoma().createTensorTrainingSetList();
+     	int aantal = xMSet.getmoma().getScanListSize();
      	if( aantal <= cmcProcConstants.MIN_TENSORFLOW_FLOW_ARCHIVE_FILES ) {
      		String sMsg = "There are too few archive files [" + aantal + "] present in [" + xMSet.getArchiveDir() + "]\nMinimum number of files required [" + cmcProcConstants.MIN_TENSORFLOW_FLOW_ARCHIVE_FILES + "]\nDo you want to continue?";
      		boolean ib = yesNoDialog(sMsg, "Creation of TensorFlow training set");
@@ -3213,31 +3248,51 @@ public class comicImageProcessorMainGUI {
   	{
   		doTensorFlowSingle(true);
   	}
-  //-----------------------------------------------------------------------
+  	
+    //-----------------------------------------------------------------------
   	public void doTensorFlowExtractSingleSet()
   	//-----------------------------------------------------------------------
   	{
   		doTensorFlowSingle(false);
   	}
+    //-----------------------------------------------------------------------
+  	public void do_TensorFlow_PostProcess()
+  	//-----------------------------------------------------------------------
+  	{
+  		doTensorFlowSingle(true);
+  	  	requestTask( cmcProcSemaphore.TaskType.TENSORFLOW_POSTPROC );
+  	}
   	//-----------------------------------------------------------------------
   	public void doTensorFlowSingle(boolean readjust)
   	//-----------------------------------------------------------------------
   	{
-  		 xMSet.setTensorFlowPostProcessIndicator(readjust);
-  		 gpFileChooser jc = new gpFileChooser(xMSet.getArchiveDir());
-    	 jc.setFilter("ARCHIVE");
-    	 jc.runDialog();
-         String LongFileName = jc.getAbsoluteFilePath();
-         if( LongFileName==null ) return;
-         boolean ib =xMSet.createTensorParagraphCheckList(LongFileName);
-      	 int aantal = (ib == false) ? -1 : xMSet.getScanListSize();
+  		 String LongFileName = null;
+  		 if( !this.robotMode ) {
+  		   xMSet.setTensorFlowPostProcessIndicator(readjust);
+  		   gpFileChooser jc = new gpFileChooser(xMSet.getArchiveDir());
+    	   jc.setFilter("ARCHIVE");
+    	   jc.runDialog();
+           LongFileName = jc.getAbsoluteFilePath();
+           if( LongFileName==null ) return;
+  		   robotMode=false;
+  	     }
+  		 else {
+  		   LongFileName = xMSet.getReportZipName();
+  		   if( xMSet.xU.IsBestand(LongFileName) == false ) {
+  	  		popMessage("Archive could not be read [" + LongFileName + "]\nPlease consult error log" );
+  	       } 
+  		   robotMode=true;
+    	   xMSet.setTensorFlowPostProcessIndicator(true);
+  		 }
+  		 //
+         boolean ib =xMSet.getmoma().createTensorParagraphCheckList(LongFileName);
+      	 int aantal = (ib == false) ? -1 : xMSet.getmoma().getScanListSize();
      	 if( aantal <= 0 ) {
      		popMessage("Archive could not be read [" + LongFileName + "]\nPlease consult error log" );
      	 }
      	 else {
      		 xMSet.setCurrentArchiveFileName( LongFileName );
      	   	 requestTask( cmcProcSemaphore.TaskType.TENSORFLOW_MAKE_SINGLE_SET );
-     		 robotMode=false;
      		 runCompleted=true; // triggert de start
      	 }
     }
@@ -3252,7 +3307,7 @@ public class comicImageProcessorMainGUI {
   	private void endTensorFlowExtractSingleSet()
   	//-----------------------------------------------------------------------
   	{
-  	  if( xMSet.getTensorFlowPostProcessIndicator() == false ) popMessage(xMSet.getStatusTensorFlowSingleSet());
+  	  if( xMSet.getTensorFlowPostProcessIndicator() == false ) popMessage(xMSet.getmoma().getStatusTensorFlowSingleSet());
   	  else {
   		  String ErrMsg = xMSet.getTensorSummaryResult();
   		  if( ErrMsg == null) return;

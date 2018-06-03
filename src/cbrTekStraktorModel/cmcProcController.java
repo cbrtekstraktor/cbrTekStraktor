@@ -316,6 +316,12 @@ public class cmcProcController extends SwingWorker<Integer, Integer> {
             	taskTipe = cmcProcSemaphore.TaskType.DO_NOTHING; 
                 break;
                 }
+            case TENSORFLOW_POSTPROC : {
+             	if( tensorflow_make_single_set() ) cSema.setSemaphore(taskTipe);
+            	else cSema.setSemaphore(cmcProcSemaphore.TaskType.SHOUT); // skips the rest
+            	taskTipe = cmcProcSemaphore.TaskType.DO_NOTHING; 
+                break;
+            }
             case DO_NOTHING : break;
             default : { do_error("Unknown semaphore state [" + taskTipe  + "]"); break; }
             }
@@ -945,7 +951,7 @@ public class cmcProcController extends SwingWorker<Integer, Integer> {
 		}
 		String estafetteFileName =xMSet.getEstafetteFileName();
 		if( xMSet.xU.IsBestand(estafetteFileName) == false ) {
-			do_error("kloonEstafette - Cannot locate image file [" + estafetteFileName + "]");
+			do_error("kloonEstafette - Cannot locate estafettefilename [" + estafetteFileName + "]");
 			return false;
 		}
 		String metadataFileName =xMSet.getMetaDataFileName();

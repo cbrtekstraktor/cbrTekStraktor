@@ -3,6 +3,7 @@ package tensorflow;
 import logger.logLiason;
 import monitor.cmcMonitorController;
 import monitor.cmcMonitorItem;
+import thread.ThreadCommonCode;
 import thread.ThreadDispatcher;
 import thread.ThreadDispatcher.REQUESTED_CLASS;
 
@@ -14,11 +15,10 @@ import cbrTekStraktorModel.cmcProcSettings;
 public class cmcVRRunTensorFlow {
 
 	private boolean MULTI_THREADED= true;
-	
-	
 		
 	cmcProcSettings xMSet=null;
 	logLiason logger=null;
+	ThreadCommonCode cocode=null;
 	
 	private String PythonHome = null;
 	private String PythonExe  = null;
@@ -59,6 +59,7 @@ public class cmcVRRunTensorFlow {
  	{
  		xMSet = iM;
 		logger = ilog;
+		cocode = new ThreadCommonCode(xMSet,logger);
  	}
  	
  	// ---------------------------------------------------------------------------------
@@ -80,7 +81,7 @@ public class cmcVRRunTensorFlow {
  	  //
  	  if( checkPythonScript() == false ) return false;
  	  //
- 	  int maxiter = xMSet.getScanListSize();
+ 	  int maxiter = xMSet.getmoma().getScanListSize();
  	  if( maxiter < 1 ) {
  		  do_error("There is nothing to process");
  		  return true;
@@ -97,7 +98,7 @@ public class cmcVRRunTensorFlow {
 			  long prevtime = System.currentTimeMillis();
 			  for(int iter=0;iter<maxiter;iter++)
 			  {
-				  String ImageFileName = xMSet.popScanListItem();  // also sets the starttime
+				  String ImageFileName = xMSet.getmoma().popScanListItem();  // also sets the starttime
 				  if( performTensorOnParagraph( moni , ImageFileName ) == false ) {
 					  ok=false;
 					  break;
@@ -113,7 +114,7 @@ public class cmcVRRunTensorFlow {
 		    // THREAD
 		    else {
 		    	  ArrayList<ThreadMonitorDTO> threadlist = new ArrayList<ThreadMonitorDTO>();
-		    	  ArrayList<cmcMonitorItem> monilist = xMSet.getMonitorList();
+		    	  ArrayList<cmcMonitorItem> monilist = xMSet.getmoma().getMonitorList();
 		    	  for(int iter=0;iter<monilist.size();iter++)
 				  {
 					cmcMonitorItem item = monilist.get(iter);
@@ -141,8 +142,6 @@ public class cmcVRRunTensorFlow {
 		    		}
 		    	  }
 		    }
-		    
-		  
 	  }
 	  catch(Exception e ) {
 	 		do_log(1,"Exception occurred [" +  e.getMessage() + "]" );
@@ -166,51 +165,10 @@ public class cmcVRRunTensorFlow {
  		  boolean ok = exc.execTensorFlowVR(ImageFileName , -1 );
  		  resp = exc.getTensorRespons();
  		  ok = (resp == null) ? false : resp.getExitStatus();
- 		  updateMonitor(moni , resp , ImageFileName );
- 		  performFeedback(resp);
+ 		  cocode.updateMonitor(moni , resp , ImageFileName );
+ 		  cocode.performFeedback(resp);
  		  exc=null;
  		  return ok;
- 	}
- 	
- 	
- 	// TODO the same code is used in threaddispatcher 	
-    // ---------------------------------------------------------------------------------
- 	private void performFeedback( ThreadMonitorDTO resp )
-    // ---------------------------------------------------------------------------------
- 	{
- 	    if( resp == null ) return;
-	    cmcVRParagraph obj = (cmcVRParagraph)xMSet.getObjectFromScanList(resp.getImageFileName());
-	    if( obj != null ) {
-	      obj.setNewTipe(resp.getTipeDeterminedViaTensor());
-	      double d=-1;
-	      switch( resp.getTipeDeterminedViaTensor() )
-	      {
-	      case TEXTPARAGRAPH: { d = resp.getTensorValidPercentage(); break; } 
-	      case PARAGRAPH: { d = resp.getTensorInvalidPercentage(); break; }
-	      default : break;
-	      }
-	      obj.setConfidence(d);
-	      xMSet.setObjectOnScanList( resp.getImageFileName() , obj);
-	    }
- 	}
- 	
- 	// ---------------------------------------------------------------------------------
- 	private void updateMonitor(cmcMonitorController moni , ThreadMonitorDTO resp , String ImageFileName)
- 	// ---------------------------------------------------------------------------------
- 	{
- 		 boolean ok = false;
- 		 String threadErrorMsg="Unknown";
- 		 if( resp != null ) { ok = resp.getExitStatus(); threadErrorMsg = resp.getErrorMsg(); }
- 		 if( ok == false ) {
-			   moni.syncMonitorComment( ImageFileName ,threadErrorMsg );
-	 		   moni.syncMonitorEnd( ImageFileName );
-	 		   return;
-	 	  }
-		  else {
-			String comm = "" + resp.getTipeDeterminedViaTensor() + " [Valid=" + resp.getTensorValidPercentage() + "] [InValid=" + resp.getTensorInvalidPercentage() + "]";
-		    moni.syncMonitorComment( ImageFileName , comm );
-		    moni.syncMonitorEnd( ImageFileName );
-		  }   
  	}
  	
     // ---------------------------------------------------------------------------------
@@ -218,10 +176,10 @@ public class cmcVRRunTensorFlow {
     // ---------------------------------------------------------------------------------
  	{
  		boolean ok=true;
- 		int maxiter = xMSet.getScanListSize();
+ 		int maxiter = xMSet.getmoma().getScanListSize();
 		for(int iter=0;iter<maxiter;iter++)
 		{
-		  cmcVRParagraph obj = (cmcVRParagraph)xMSet.getObjectFromScanList(iter);
+		  cmcVRParagraph obj = (cmcVRParagraph)xMSet.getmoma().getObjectFromScanList(iter);
 		  if( obj != null ) {
 			 String LongImageFileName = obj.getLongImageFileName();
 			 if( xMSet.xU.IsBestand(LongImageFileName) == false ) continue;
@@ -303,7 +261,6 @@ public class cmcVRRunTensorFlow {
  		do_error( "Create PYTHON script [" + ScriptName + "]");
  		return true;
  	}
- 	
  
  	
 }

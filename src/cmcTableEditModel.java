@@ -137,7 +137,10 @@ public class cmcTableEditModel extends AbstractTableModel {
 			switch(xMSet.getQuickEditOption())
 			{
 			case TEXT_AREAS : {
-				if( col==cmcProcEnums.getQuickColsIndex(cmcProcEnums.QUICKCOLS.EXTRACTED_TEXT)) return true;
+				if( col==cmcProcEnums.getQuickColsIndex(cmcProcEnums.QUICKCOLS.EXTRACTED_TEXT))	{
+					xMSet.setQuickEditRequestedRow(row);
+					return true;
+				}
 				break;
 			}
 			case POTENTIAL_TEXT_AREAS : {
@@ -153,7 +156,10 @@ public class cmcTableEditModel extends AbstractTableModel {
 		{
 		case TEXT_AREAS : {
 			if( col==cmcProcEnums.getQuickColsIndex(cmcProcEnums.QUICKCOLS.ISTEXT)) return true;
-			if( col==cmcProcEnums.getQuickColsIndex(cmcProcEnums.QUICKCOLS.EXTRACTED_TEXT)) return true;
+			if( col==cmcProcEnums.getQuickColsIndex(cmcProcEnums.QUICKCOLS.EXTRACTED_TEXT))  {
+				xMSet.setQuickEditRequestedRow(row);
+				return true;
+			}
 			if( col==cmcProcEnums.getQuickColsIndex(cmcProcEnums.QUICKCOLS.REMOVED)) return true;
 			break;
 		}
@@ -179,7 +185,14 @@ public class cmcTableEditModel extends AbstractTableModel {
 		}
 		else 
 		if( column == cmcProcEnums.getQuickColsIndex(cmcProcEnums.QUICKCOLS.EXTRACTED_TEXT) ) {
-		    if( GraphObject.setText(row,value.toString()) == false ) return; 
+			String txt = value.toString();
+			if( txt != null ) {
+				if( txt.toUpperCase().trim().startsWith("<HTML>") && (txt.toUpperCase().trim().endsWith("</HTML>")) ) {
+					do_error("STRIPPEN =>" + txt);
+				}
+			}
+			xMSet.setQuickEditRequestedRow(-1);
+		    if( GraphObject.setText(row,txt) == false ) return;  
 		}
 		else 
 		if( column == cmcProcEnums.getQuickColsIndex(cmcProcEnums.QUICKCOLS.REMOVED) ) {

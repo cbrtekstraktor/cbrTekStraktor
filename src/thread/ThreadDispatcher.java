@@ -25,6 +25,7 @@ public class ThreadDispatcher {
 	logLiason logger=null;
 	cmcMonitorController moni=null;
 	gpInterrupt irq=null;
+	ThreadCommonCode cocode = null;
 	
 	private String ErrorMsg=null;
 	private int loglevel=9;
@@ -65,6 +66,7 @@ public class ThreadDispatcher {
 		MAX_THREAD_ERRORS = MAX_NUM_THREADS = xMSet.getMaxThreads();
 		moni = imoni;
 		irq = new gpInterrupt(xMSet.getInterruptFileName());
+		cocode = new ThreadCommonCode(xMSet,logger);
     }
 
     //----------------------------------------------------------------
@@ -130,7 +132,7 @@ public class ThreadDispatcher {
 					th.start();				
 					threadStarted=true;
 					// 
-					xMSet.setStartTimeOnScanList( list.get(firstQueueIndex).getImageFileName() );
+					xMSet.getmoma().setStartTimeOnScanList( list.get(firstQueueIndex).getImageFileName() );
 					requestToDisplayProgress=true;
 					//
 					break;
@@ -219,10 +221,9 @@ public class ThreadDispatcher {
   	{
   		try {
   		  if ( resp == null ) return;
- 		  performFeedback( resp );
-		  updateMonitor( moni , resp , resp.getImageFileName() );
-		  //xMSet.setStartTimeOnScanList( resp.getImageFileName() , resp.getStarttime() );
-		  xMSet.setEndTimeOnScanList( resp.getImageFileName() , resp.getEndtime() );
+ 		  cocode.performFeedback( resp );
+		  cocode.updateMonitor( moni , resp , resp.getImageFileName() );
+		  xMSet.getmoma().setEndTimeOnScanList( resp.getImageFileName() , resp.getEndtime() );
 		  moni.syncMonitorEnd( null);
   		}
   		catch(Exception e) {
@@ -230,44 +231,4 @@ public class ThreadDispatcher {
   		}
   	}
   	
-  	// TODO - is identical to code in tensorscript
-    // ---------------------------------------------------------------------------------
-  	private void performFeedback( ThreadMonitorDTO resp )
-    // ---------------------------------------------------------------------------------
-  	{
-  	    if( resp == null ) return;
- 	    cmcVRParagraph obj = (cmcVRParagraph)xMSet.getObjectFromScanList(resp.getImageFileName());
- 	    if( obj != null ) {
- 	      obj.setNewTipe(resp.getTipeDeterminedViaTensor());
- 	      double d=-1;
- 	      switch( resp.getTipeDeterminedViaTensor() )
- 	      {
- 	      case TEXTPARAGRAPH: { d = resp.getTensorValidPercentage(); break; } 
- 	      case PARAGRAPH: { d = resp.getTensorInvalidPercentage(); break; }
- 	      default : break;
- 	      }
- 	      obj.setConfidence(d);
- 	      xMSet.setObjectOnScanList( resp.getImageFileName() , obj);
- 	    }
-  	}
-  	
-    // ---------------------------------------------------------------------------------
-  	private void updateMonitor(cmcMonitorController moni , ThreadMonitorDTO resp , String ImageFileName)
-  	// ---------------------------------------------------------------------------------
-  	{
-  		 boolean ok = false;
-  		 String threadErrorMsg="Unknown";
-  		 if( resp != null ) { ok = resp.getExitStatus(); threadErrorMsg = resp.getErrorMsg(); }
-  		 if( ok == false ) {
- 			   moni.syncMonitorComment( ImageFileName ,threadErrorMsg );
- 	 		   moni.syncMonitorEnd( ImageFileName );
- 	 		   return;
- 	 	  }
- 		  else {
- 			String comm = "" + resp.getTipeDeterminedViaTensor() + " [Valid=" + resp.getTensorValidPercentage() + "] [InValid=" + resp.getTensorInvalidPercentage() + "]";
- 		    moni.syncMonitorComment( ImageFileName , comm );
- 		    moni.syncMonitorEnd( ImageFileName );
- 		  }   
-  	}
-    
 }

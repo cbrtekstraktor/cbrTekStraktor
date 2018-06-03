@@ -88,10 +88,10 @@ public class cmcTextImport {
  		
  		cmcMonitorController moni = new cmcMonitorController(xMSet,logger);
 		moni.startMonitor(xMSet.getExportFileName());
-     	int maxiter = xMSet.getScanListSize();
+     	int maxiter = xMSet.getmoma().getScanListSize();
 		for(int iter=0;iter<maxiter;iter++)
 		{
-		  String sCMXUID = xMSet.popScanListItem();  // also sets the starttime
+		  String sCMXUID = xMSet.getmoma().popScanListItem();  // also sets the starttime
  		  if( sCMXUID == null ) break;
  		  moni.syncMonitor();
  		  if( importTextFromArchive(sCMXUID) == false ) { isOK=false; break; }

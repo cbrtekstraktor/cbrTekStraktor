@@ -1,22 +1,17 @@
 package cbrTekStraktorModel;
 
 import java.awt.Font;
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
+import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
 
-import tensorflow.cmcVRArchive;
-import tensorflow.cmcVRMakeTrainingImages;
-import tensorflow.cmcVRParagraph;
 import cbrTekStraktorProject.cbrTekStraktorProjectManager;
 import cbrTekStraktorProject.cmcProjectWrapper;
 import logger.logLiason;
-import monitor.cmcMonitorItem;
+import monitor.cmcMonitorDataObjectManager;
 import generalpurpose.gpLanguage;
 import generalpurpose.gpPrintStream;
 import generalpurpose.gpUtils;
@@ -24,10 +19,12 @@ import generalpurpose.gpUtils;
 
 public class cmcProcSettings {
 	
+	public boolean TENSOR_SIMULATOR = false;
+	
 	logLiason logger = null;
 	cbrTekStraktorProjectManager projman = null;
 	gpLanguage langObj=null;
-	
+	cmcMonitorDataObjectManager moma = null;
 	
 	private String OrigImageLongFileName=null;
 	
@@ -37,11 +34,10 @@ public class cmcProcSettings {
     private long startedAt = System.currentTimeMillis();
     private long startTmeNano = System.nanoTime();
 	private long longCounter=0L;
-	
-    public int startX = 50;
-    public int startY = 50;
-    public int startW = 1000;
-    public int startH = 800;
+	 
+    public Rectangle mainframe = new Rectangle(50,50,1000,800);
+    public Rectangle quickframe = new Rectangle(50,50,1000,400);
+    public Rectangle monitframe = new Rectangle(100,100,800,400);
     
     private String[] languageLijst = null;
     
@@ -65,15 +61,13 @@ public class cmcProcSettings {
 	
 	private String[] arStack = new String[5];
 	
-	private ArrayList<cmcMonitorItem> scanList = null;
-	
+	private int QuickEditRequestedRow = -1;
+	private String exportFileName = null;
 	private String recentImageDir = null;
 	private String recentSaveDir = null;
 	private String recentArchiveDir = null;
 	private String currentArchiveFileName=null;
 	private boolean useMonoChromeInDialogs=false;
-	private String scanFolder = null;
-	private String exportFileName = null;
 	private String OCRSummaryResult = null;
     private boolean performTensorFlowPostProcess = false;
     
@@ -105,6 +99,7 @@ public class cmcProcSettings {
 		xU = new gpUtils();
 		projman = new cbrTekStraktorProjectManager(this,logger);
 		langObj = new gpLanguage();
+		moma = new cmcMonitorDataObjectManager(this,logger);
 		isActive = initialize(args);
  	}
 	
@@ -133,15 +128,6 @@ public class cmcProcSettings {
 	{
 		return cmcProcConstants.Application;
 	}
-	/*
-	//---------------------------------------------------------------------------------
-	private void Usage()
-	//---------------------------------------------------------------------------------
-	{
-		do_error(Application + " " + getApplicDesc());
-		do_error("Usage : " + Application + " -D WorkFolder");
-	}
-	*/
 	//---------------------------------------------------------------------------------
 	public void setOptimalThreshold(int t)
 	//---------------------------------------------------------------------------------
@@ -285,6 +271,10 @@ public class cmcProcSettings {
 			return clusterDefaultClassificationMethod;
 	}
 	
+	public cmcMonitorDataObjectManager getmoma()
+	{
+		return moma;
+	}
 	public void setTensorFlowPostProcessIndicator(boolean ib)
 	{
 		this.performTensorFlowPostProcess = ib;
@@ -293,7 +283,6 @@ public class cmcProcSettings {
 	{
 		return performTensorFlowPostProcess;
 	}
-	
 	
 	//---------------------------------------------------------------------------------
 	public cmcProcEnums.BinarizeClassificationMethod getDefaultBinarizeClassificationMethod()
@@ -310,321 +299,6 @@ public class cmcProcSettings {
 	  		if( s.trim().compareToIgnoreCase( languageLijst[i].trim() ) == 0 ) return true;
 	  	}
 	  	return false;
-	}
-	//---------------------------------------------------------------------------------
-	public void createScanList(String sDir)
-	//---------------------------------------------------------------------------------
-	{
-		scanFolder=sDir;
-		scanList=null;
-		scanList = new ArrayList<cmcMonitorItem>();
-		ArrayList<String> list = xU.GetFilesInDirRecursive(scanFolder,null);
-		for(int i=0;i<list.size();i++)
-		{
-			String sF = list.get(i);
-			if( xU.isGrafisch(sF) == false  ) continue;
-		    cmcMonitorItem x = new cmcMonitorItem((long)i);
-		    x.setFileName(sF);
-		    scanList.add(x);
-		}
-	}
-	// 
-	//---------------------------------------------------------------------------------
-	public void createOCRScanList(String sDir)
-	//---------------------------------------------------------------------------------
-	{
-		    // create list of images
-		    createScanList(sDir);
-		    if( scanList == null ) return;
-		    if( scanList.size() < 1 ) return;
-		    // Look for a matching ZIP archive
-		    String BCKOrigImageLongFileName = OrigImageLongFileName;
-		    for(int i=0;i<scanList.size();i++)
-		    {
-		    	scanList.get(i).setComment("REMOVE");
-		    	OrigImageLongFileName = scanList.get(i).getFileName();
-		    	String FArchive = getReportZipName();
-		        if( FArchive == null ) continue;
-		        if( xU.IsBestand(FArchive) ) {
-		            scanList.get(i).setComment( xU.getFolderOrFileName(scanList.get(i).getFileName()) );
-		            scanList.get(i).setFileName( FArchive );
-		        }
-		    }
-		    OrigImageLongFileName = BCKOrigImageLongFileName;
-		    //  remove images from list without matching zip
-		    int aant = scanList.size();
-		    for(int k=0;k<aant;k++)
-		    {
-		    	for(int i=0;i<scanList.size();i++)
-		    	{
-		    		if( scanList.get(i).getComment().compareToIgnoreCase("REMOVE") == 0 ) {
-		    			scanList.remove(i);
-		    			break;
-		    		}
-		    	}
-		    }
-		    //
-    }
-	//---------------------------------------------------------------------------------
-	public void createImportScanList(String FName)
-	//---------------------------------------------------------------------------------
-	{
-			scanFolder= xU.getParentFolderName(FName);
-			exportFileName = null;
-			scanList=null;
-			scanList = new ArrayList<cmcMonitorItem>();
-			boolean validformat=false;
-			try {
-			  BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(FName), getCodePageString()));
-	       	  //
-	       	  int aantal=0;
-	       	  String sLijn=null;
-          	  while ((sLijn=reader.readLine()) != null) {
-		           if( sLijn.trim().length() < 1) continue;
-          		   //
-          		   if( sLijn.trim().startsWith("<!--") ) {
-          			 String sComp = xU.keepLettersAndNumbers(sLijn).trim();
-          		     if( sComp.toUpperCase().startsWith("FORMATVERSION") ) {
-          			     sComp = xU.keepNumbers(sLijn).trim();
-          			     long vl = xU.NaarLong(sComp);
-          			     if( vl < cmcProcConstants.ExportFormatVersion ) {
-          			    	 do_error("Export Format Version is obsolete [" + vl + "] requires [" + cmcProcConstants.ExportFormatVersion + "]");
-          			     }
-          			     else { validformat = true; exportFileName = FName; continue; }
-          		     }
-                     //          		 
-          		     if( validformat == false ) continue;
-            		 // extract CMXUID
-          		     if( (sComp.startsWith("CMXUID")) && ( sComp.length() > ("CMXUID".length()+2) ) ) {
-          		    	   //String sFile = sComp.substring("CMXUID".length());
-          		    	   int l1 = sLijn.indexOf("[");
-          		    	   int l2 = sLijn.indexOf("]");
-          		    	   if( (l1<0) || (l2<0) || (l2<=l1) ) continue;
-          		    	   String sFile = sLijn.substring(l1+1,l2);
-          		    	   aantal++;
-        				   cmcMonitorItem x = new cmcMonitorItem((long)aantal);
-     			           x.setFileName(sFile);
-     			           scanList.add(x); 	 
-          		     }
-          		   }
-           	  }
-          	  reader.close();
-			}
-			catch(Exception e ) {
-		       do_error("Could not read [" + FName + "] " + e.getMessage() );		
-			}
-	}
-
-	//---------------------------------------------------------------------------------
-	public boolean createTensorTrainingSetList()
-	//---------------------------------------------------------------------------------
-	{
-		scanList=null;
-		ArrayList<String> alist = xU.GetFilesInDir( getArchiveDir() , null );
-		if( alist == null ) {
-			do_error("Cannot read files in [" + getArchiveDir() + "]");
-			return false;
-		}
-		scanList = new ArrayList<cmcMonitorItem>();
-		for(int i=0; i<alist.size(); i++)
-		{
-			if( alist.get(i).toUpperCase().trim().endsWith(".ZIP") ) {
-      			cmcMonitorItem y = new cmcMonitorItem( (long)i );
-    	    	y.setFileName( alist.get(i) );
-    	    	scanList.add( y );
-			}
-		}
-        return true;
-	}
-	//---------------------------------------------------------------------------------
-	public boolean createTensorParagraphCheckList(String LongFName)
-	//---------------------------------------------------------------------------------
-	{
-			scanList=null;
-			String ShortFileName = xU.GetFileName(LongFName);
-			scanList = new ArrayList<cmcMonitorItem>();
-		 	cmcMonitorItem x = new cmcMonitorItem(System.currentTimeMillis());
-	    	x.setFileName( ShortFileName );
-	    	x.setStarttime(System.currentTimeMillis());
-	    	x.setProcessed(true);
-	      	x.setComment("Busy");
-	    	scanList.add(x);
-	        //
-			cmcVRMakeTrainingImages ms = new cmcVRMakeTrainingImages( this , logger );
-	    	boolean ib = ms.make_single_set( ShortFileName );
-	    	if( ib ) {
-	    	  ArrayList<cmcVRArchive> mlist = ms.getList();
-	    	  scanList.get(0).setEndtime(System.currentTimeMillis());
-	      	  scanList.get(0).setProcessed(true);
-	      	  scanList.get(0).setComment("Failed");
-		      if( mlist == null ) return false;
-	    	  if( mlist.size() == 0 ) return false;
-	    	  ArrayList<cmcVRParagraph> plist = mlist.get(0).getplist();
-	    	  int ncnt = ( plist == null ) ? 0 : plist.size();
-	      	  scanList.get(0).setComment("[" + ncnt + "] images extracted in [" + ((System.currentTimeMillis()-scanList.get(0).getStarttime())/1000L) + "] seconds");
-              // do we also need to process the images extracted ?
-	      	  if( this.getTensorFlowPostProcessIndicator() ) {
-	      		  scanList = null;   // 
-	      		  scanList = new ArrayList<cmcMonitorItem>();
-	      		  for(int i=0;i<plist.size();i++)
-	      		  {
-	      			cmcMonitorItem y = new cmcMonitorItem( plist.get(i).getUID() );
-	    	    	y.setFileName( plist.get(i).getLongImageFileName() );
-	    	    	y.setObject( plist.get(i) );
-	    	    	scanList.add( y );
-	    	    }
-	      	  }
-	    	}
-	        ms=null;
-	        return ib;
-	}
-
-	//---------------------------------------------------------------------------------
-	public String getStatusTensorFlowSingleSet()
-	//---------------------------------------------------------------------------------
-	{
-	     if( scanList == null) return "Could not start extraction";
-	     if( scanList.size() < 1) return "Could not extract images";
-	     return "[" + scanList.get(0).getFileName() + "] " + scanList.get(0).getComment();
-	}
-	
-	//---------------------------------------------------------------------------------
-	public int getScanListSize()
-	//---------------------------------------------------------------------------------
-	{
-		if( scanList == null ) return 0;
-		return scanList.size();
-	}
-	//---------------------------------------------------------------------------------
-	public String popScanListItem()
-	//---------------------------------------------------------------------------------
-	{
-		if( scanList == null ) return null;
-		if( scanList.size() == 0 ) return null;
-		for(int i=0;i<scanList.size();i++)
-		{
-//do_error( scanList.get(i).getFileName() + " " + scanList.get(i).getStarttime() );
-			if ( scanList.get(i).getProcessed() == true ) continue;
-			scanList.get(i).setProcessed(true);
-			scanList.get(i).setStarttime(System.currentTimeMillis());
-			return scanList.get(i).getFileName();
-		}
-		return null;
-	}
-	//---------------------------------------------------------------------------------
-	private boolean setStartEndTimeOnScanList(String BulkFileName , int tipe , long tt)
-	//---------------------------------------------------------------------------------
-	{
-		    long tset = ( tt <= 0L ) ? System.currentTimeMillis() : tt; 
-			if( scanList == null ) return false;
-			if( scanList.size() == 0 ) return false;
-			for(int i=0;i<scanList.size();i++)
-			{ 
-				String FName =scanList.get(i).getFileName();
-				if( FName == null ) continue;
-				if( FName.compareToIgnoreCase(BulkFileName) == 0 ) {
-					if( tipe == 0 ) scanList.get(i).setStarttime(tset);
-					if( tipe == 1 ) scanList.get(i).setEndtime(tset);
-					return true;
-				}
-			}
-			return false;
-	}
-	//---------------------------------------------------------------------------------
-	public boolean setStartTimeOnScanList(String BulkFileName)
-	//---------------------------------------------------------------------------------
-	{
-		return setStartEndTimeOnScanList( BulkFileName , 0 , -1L);
-	}
-
-	//---------------------------------------------------------------------------------
-	public boolean setEndTimeOnScanList(String BulkFileName)
-	//---------------------------------------------------------------------------------
-	{
-		return setStartEndTimeOnScanList( BulkFileName , 1 , -1L);
-	}
-	//---------------------------------------------------------------------------------
-	public boolean setStartTimeOnScanList(String BulkFileName , long tt)
-	//---------------------------------------------------------------------------------
-	{
-		return setStartEndTimeOnScanList( BulkFileName , 0 , tt);
-	}
-	//---------------------------------------------------------------------------------
-	public boolean setEndTimeOnScanList(String BulkFileName , long tt)
-	//---------------------------------------------------------------------------------
-	{
-		return setStartEndTimeOnScanList( BulkFileName , 1 , tt);
-	}
-	//
-	//---------------------------------------------------------------------------------
-	public boolean setCommentOnScanList(String BulkFileName , String Comment)
-	//---------------------------------------------------------------------------------
-	{
-			if( scanList == null ) return false;
-			if( scanList.size() == 0 ) return false;
-			for(int i=0;i<scanList.size();i++)
-			{ 
-				String FName =scanList.get(i).getFileName();
-				if( FName == null ) continue;
-				if( FName.compareToIgnoreCase(BulkFileName) == 0 ) {
-					scanList.get(i).setComment(Comment);
-					return true;
-				}
-			}
-			return false;
-	}
-	//
-	//---------------------------------------------------------------------------------
-	public Object getObjectFromScanList(String BulkFileName )
-	//---------------------------------------------------------------------------------
-	{
-			if( scanList == null ) return null;
-			if( scanList.size() == 0 ) return null;
-			for(int i=0;i<scanList.size();i++)
-			{ 
-				String FName =scanList.get(i).getFileName();
-				if( FName == null ) continue;
-				if( FName.compareToIgnoreCase(BulkFileName) == 0 ) {
-					return scanList.get(i).getObject();
-				}
-			}
-			return null;
-	}
-	//
-	//---------------------------------------------------------------------------------
-	public Object getObjectFromScanList(int idx )
-	//---------------------------------------------------------------------------------
-	{
-			if( scanList == null ) return null;
-			if( scanList.size() <= idx ) return null;
-			return scanList.get(idx).getObject();
-	}
-	//
-	//---------------------------------------------------------------------------------
-	public boolean setObjectOnScanList(String BulkFileName , Object obj)
-	//---------------------------------------------------------------------------------
-	{
-			if( scanList == null ) return false;
-			if( scanList.size() == 0 ) return false;
-			for(int i=0;i<scanList.size();i++)
-			{ 
-				String FName =scanList.get(i).getFileName();
-				if( FName == null ) continue;
-				if( FName.compareToIgnoreCase(BulkFileName) == 0 ) {
-					scanList.get(i).setObject(obj);
-		//do_error( "SET => " + obj.toString() );
-					return true;
-				}
-			}
-			return false;
-	}
-	
-
-	//---------------------------------------------------------------------------------
-	public ArrayList<cmcMonitorItem> getMonitorList()
-	//---------------------------------------------------------------------------------
-	{
-	   return scanList;
 	}
 	
 	public boolean hasMetadataBeenModified()
@@ -703,6 +377,10 @@ public class cmcProcSettings {
 		return exportFileName;
 	}
 	// getters/setters FileNames
+	public void setExportFileName(String s)
+	{
+		exportFileName=s;
+	}
 	//---------------------------------------------------------------------------------
 	public void setOrigImageLongFileName(String sF)
 	//---------------------------------------------------------------------------------
@@ -828,7 +506,7 @@ public class cmcProcSettings {
 		}		
 		return sTemp;
 	}
-	// haalt de korte filenaam uit de lange en verwijdert rare tekens
+	// Extracts the file name from absolute path and replaces non alphanumericals
 	public String getCleansedShortFileName(String longFileName,String caller)
 	{
 		try {
@@ -839,7 +517,7 @@ public class cmcProcSettings {
 	    return sNew.toLowerCase().trim();
 		}
 		catch(Exception e) {
-			do_error("function - getCleansedShortFileName() calleer=" + caller + " " + longFileName + " " + e.getMessage() );
+			do_error("function - getCleansedShortFileName() [Caller=" + caller + "] [LongFileName=" + longFileName + "] [Msg=" + e.getMessage() + "]" );
 		}
 		return  null;
 	}
@@ -1003,7 +681,7 @@ public class cmcProcSettings {
 		return projman.getMeanCharacterCount();
 	}
 	//---------------------------------------------------------------------------------
-	public void writePropertiesFile(int x , int y , int w , int h, String[] ar)
+	public void writePropertiesFile(Rectangle main , String[] ar)
 	//---------------------------------------------------------------------------------
 	{
 	    if( this.isActive == false ) return;
@@ -1013,8 +691,13 @@ public class cmcProcSettings {
 		ps.println("Started=" + xU.prntStandardDateTime(startedAt) );
 		ps.println("Stopped=" + xU.prntStandardDateTime(System.currentTimeMillis()));
 		ps.println("=============================================================");
-		ps.println("location=" + x + "," + y );
-		ps.println("size=" + w + "," + h );
+		ps.println("mainlocation=" + (int)main.getX() + "," + (int)main.getY() );
+		ps.println("mainsize=" + (int)main.getWidth() + "," + (int)main.getHeight());
+		ps.println("quicklocation=" + (int)quickframe.getX() + "," + (int)quickframe.getY() );
+		ps.println("quicksize=" + (int)quickframe.getWidth() + "," + (int)quickframe.getHeight());
+		ps.println("monitorlocation=" + (int)monitframe.getX() + "," + (int)monitframe.getY() );
+		ps.println("monitorsize=" + (int)monitframe.getWidth() + "," + (int)monitframe.getHeight());
+	    //
 		for(int i=0;i<ar.length;i++)
 		{
 			ps.println("file=" + ar[i] );
@@ -1035,24 +718,30 @@ public class cmcProcSettings {
 		if( xU.IsBestand( getPropertiesFile() ) == false ) return;
 		String stext = xU.ReadContentFromFile( getPropertiesFile() , 1000 , "ASCII");
 		int aantal = xU.TelDelims(stext,'\n');
-		String sx=null;
-		String sy=null;
-		String sw=null;
-		String sh=null;
+		String srect[] = {null,null,null,null};
 		int k=-1;
 		for(int i=0;i<(aantal+1);i++)
 		{
 			String sLijn = xU.GetVeld(stext,i+1,'\n').trim();
-			if( sLijn.startsWith("location") ) {
+			if( sLijn.indexOf("location=") >= 0) {
 			    sLijn = xU.GetVeld(sLijn,2,'=');
-			    sx = xU.GetVeld(sLijn,1,',').trim();
-			    sy = xU.GetVeld(sLijn,2,',').trim();
+			    srect[0] = xU.GetVeld(sLijn,1,',').trim();
+			    srect[1] = xU.GetVeld(sLijn,2,',').trim();
 			}
-			if( sLijn.startsWith("size") ) {
-			    sLijn = xU.GetVeld(sLijn,2,'=');
-			    sw = xU.GetVeld(sLijn,1,',').trim();
-			    sh = xU.GetVeld(sLijn,2,',').trim();
+			if( sLijn.indexOf("size=") > 0) {
+			    String ptwo = xU.GetVeld(sLijn,2,'=');
+			    srect[2] = xU.GetVeld(ptwo,1,',').trim();
+			    srect[3] = xU.GetVeld(ptwo,2,',').trim();
+			    Rectangle rx = parserectangle(srect,sLijn);
+			    if( rx != null ) {
+			       //do_error( sLijn );
+			    	if( sLijn.startsWith("main") ) mainframe = rx;
+			    	if( sLijn.startsWith("quick") ) quickframe = rx;
+			    	if( sLijn.startsWith("monitor") ) monitframe = rx;
+			    }
+			    srect[0]=srect[1]=srect[2]=srect[3]=null;
 			}
+			//
 			if( sLijn.startsWith("file") ) {
 				sLijn = xU.GetVeld(sLijn,2,'=');
 				k++;
@@ -1078,25 +767,27 @@ public class cmcProcSettings {
 			    }
 			}
 		}
-		if( sx == null ) return;
-		if( sy == null ) return;
-		if( sw == null ) return;
-		if( sh == null ) return;
-		//
-		int isx = xU.NaarInt(sx);
-		int isy = xU.NaarInt(sy);
-		int isw = xU.NaarInt(sw);
-		int ish = xU.NaarInt(sh);
-		//
-		if( isx < 0 ) return;
-		if( isy < 0 ) return;
-		if( isw < 100 ) return;
-		if (ish < 100 ) return;
-		//
-		startX = isx;
-		startY = isy;
-		startW = isw;
-		startH = ish;
+	}
+
+	//------------------------------------------------------------
+	private Rectangle parserectangle(String[] sbounds , String tipe)
+	//------------------------------------------------------------
+	{
+		try {
+		 int ix = xU.NaarInt(sbounds[0]);
+		 int iy = xU.NaarInt(sbounds[1]);
+		 int iw = xU.NaarInt(sbounds[2]);
+		 int ih = xU.NaarInt(sbounds[3]);
+		 if( ix < 0 ) return null;
+		 if( iy < 0 ) return null;
+		 if( iw < 100 ) return null;
+		 if (ih < 100 ) return null;
+         return new Rectangle( ix , iy , iw , ih );
+		}
+		catch(Exception e ) {
+			do_error("Cannot parse rectangle dimension in properties file");
+			return null; 
+		}
 	}
 	
 	//------------------------------------------------------------
@@ -1199,7 +890,16 @@ public class cmcProcSettings {
 	{
 		quickEditTipe = inOption;
 	}
-
+	
+	public void setQuickEditRequestedRow(int currentrow)
+	{
+		QuickEditRequestedRow=currentrow;
+	}
+	public int getQuickEditRequestedRow()
+	{
+		return QuickEditRequestedRow;
+	}
+	
 	
 	public void setRecentImageDir(String sDir)
 	{
@@ -1382,7 +1082,7 @@ public class cmcProcSettings {
 	public String getScanFolder()
 	//---------------------------------------------------------------------------------
 	{
-		return scanFolder;
+		return moma.getScanFolder();
 	}
 	//---------------------------------------------------------------------------------
 	public void setOCRSummaryResult(String s)
@@ -1403,7 +1103,17 @@ public class cmcProcSettings {
 	{
 		return getOCRSummaryResult();
 	}
-	
-	
+	//---------------------------------------------------------------------------------
+	public void setQuickFrameBounds(int x , int y , int w , int h)
+	//---------------------------------------------------------------------------------
+	{
+		quickframe.setBounds(x, y, w, h);
+	}
+	//---------------------------------------------------------------------------------
+	public void setMonitorFrameBounds(int x , int y , int w , int h)
+	//---------------------------------------------------------------------------------
+	{
+		monitframe.setBounds(x, y, w, h);
+	}
 	
 }

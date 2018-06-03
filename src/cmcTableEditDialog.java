@@ -61,6 +61,8 @@ public class cmcTableEditDialog {
 	private boolean isOK=false;
 	private boolean okPressed=false;
 	private boolean cancelPressed=false;
+    private int PreviousSelectedRow = -1;
+    private int PreviousSelectedCol = -1;
 	
 	//------------------------------------------------------------
     private void do_log(int logLevel , String sIn)
@@ -109,7 +111,8 @@ public class cmcTableEditDialog {
 	private void initialize(JFrame jf)
 	//-----------------------------------------------------------------------
 	{
-	
+        PreviousSelectedRow = PreviousSelectedCol = -1;
+        //
 		try {
 			   final JDialog dialog = new JDialog(jf,"",Dialog.ModalityType.DOCUMENT_MODAL);  // final voor de dispose   
 	            dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
@@ -124,11 +127,11 @@ public class cmcTableEditDialog {
                  }
                  public void componentMoved(ComponentEvent e)
                  {
-                   //System.out.println("dialog moved");
+                    //
                  }
                  public void componentResized(ComponentEvent e)
                  {
-                   //System.out.println("dialog resized");
+                	 perform_resize( dialog );
                  }
                  public void componentShown(ComponentEvent e)
                  {
@@ -138,7 +141,7 @@ public class cmcTableEditDialog {
 	            dialog.addWindowListener(new WindowAdapter() {
 	                @Override
 	                public void windowClosed(WindowEvent e) {
-	                    do_close();
+	                    do_close(dialog);
 	                }
 	            });
 	            //
@@ -209,7 +212,11 @@ public class cmcTableEditDialog {
 	    				JTable target = (JTable)arg0.getSource();
 	    				CurrentSelectedRow = target.getSelectedRow();
 	    		        CurrentSelectedCol = target.getSelectedColumn();
-	    		        //System.out.println("R"+ CurrentSelectedRow + " C" + CurrentSelectedCol );
+                        if( (CurrentSelectedRow != PreviousSelectedRow) || (CurrentSelectedCol != PreviousSelectedCol) ) {
+	                        xMSet.setQuickEditRequestedRow(-1);  		        	
+	    		        }
+	    		        PreviousSelectedRow = CurrentSelectedRow;
+	    		        PreviousSelectedCol = CurrentSelectedCol;
 	    		  }
 	    		});
 	    		/*
@@ -259,13 +266,13 @@ public class cmcTableEditDialog {
                 //	            
 	    		frmComicScrollPane.setViewportView(frmComicScannerTable);
 	    	    //
-	    		// Clicken op tabel header
+	    		// Clicken on header of table
 	    		frmComicScannerTable.getTableHeader().addMouseListener(new MouseAdapter() {
 	    		    @Override
 	    		    public void mouseClicked(MouseEvent e) {
 	    		        int col = frmComicScannerTable.columnAtPoint(e.getPoint());
 	    		        String name = frmComicScannerTable.getColumnName(col);
-	    		        System.out.println("Column index selected " + col + " " + name);
+	    		        do_log( 9 , "Click on Header column index selected " + col + " " + name);
 	    		        //xCtrl.doeSorteer(col,MyScanModel.toggleColSortOrder(col));
 	    		        //MyScanModel.fireTableDataChanged();
 	    		    }
@@ -345,15 +352,24 @@ public class cmcTableEditDialog {
 	            dialog.add(koepelPane);
 	            dialog.pack();
 	            dialog.setLocationByPlatform(true);
+	            //dialog.setSize(  (int)xMSet.quickframe.getWidth() , (int)xMSet.quickframe.getWidth() );
+	            dialog.setBounds( xMSet.quickframe );
 	            dialog.setVisible(true);
 	            isOK=true;
 	            //
 		}
 		catch(Exception e) {
 			isOK=false;
-			do_error("Error openining Quick Edit Dialog" + xMSet.xU.LogStackTrace(e));
+			do_error("Error opening Quick Edit Dialog" + xMSet.xU.LogStackTrace(e));
 		}
+	}
+	
 
+	//-----------------------------------------------------------------------
+	private void perform_resize( JDialog diag)
+	//-----------------------------------------------------------------------
+	{
+		//do_log( 9 , "===>" + diag.getWidth() + " " + diag.getHeight() );
 	}
 	
 	//-----------------------------------------------------------------------
@@ -413,10 +429,11 @@ public class cmcTableEditDialog {
 	}
 
 	//-----------------------------------------------------------------------
-	private void do_close()
+	private void do_close(JDialog diag)
 	//-----------------------------------------------------------------------
 	{
 		if( MyScanModel == null ) return;
+		xMSet.setQuickFrameBounds( diag.getX() , diag.getY() , diag.getWidth() , diag.getHeight() );
 		if( MyScanModel.ContentHasBeenEdited() == false ) return;
 		if( cancelPressed ) {
 		  int reply = JOptionPane.showConfirmDialog(null, "There are changes. Do you want to save those", MyScanModel.getCMXUID() , JOptionPane.YES_NO_OPTION);
@@ -434,7 +451,8 @@ public class cmcTableEditDialog {
 	    	JOptionPane.showMessageDialog(null,"Changes could not be stored in archive","Project [" + xMSet.getCurrentArchiveFileName() + "]",JOptionPane.ERROR_MESSAGE);
         }
 		do_log(1,"changes have been propagated to [Status=" + isOK + "]");
-   }
+		
+    }
 
 	//-----------------------------------------------------------------------
 	private void checkButtonStatus()

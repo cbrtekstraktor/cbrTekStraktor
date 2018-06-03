@@ -344,7 +344,11 @@ public class cmcTableEditModelGraphPageObject {
 	    case WIDTH : return ar_selection[row].width;
 	    case HEIGHT : return ar_selection[row].height;
 	    case ISTEXT : return ar_selection[row].isText;
-	    case EXTRACTED_TEXT : return ar_selection[row].text;
+	    case EXTRACTED_TEXT : {
+	    	// if in edit mode and this is the current row the do not add HTML
+	    	if( xMSet.getQuickEditRequestedRow() == row ) return ar_selection[row].text;
+	    	return "<html>" + ar_selection[row].text + "</html>";   // for some reason adding HMTL results in text wrapping
+	    }
 	    case REMOVED : return ar_selection[row].hasBeenRemoved;
 	    case CLASSIFICATION : return ar_selection[row].obj.tipe;
 	    case CHANGETYPE : return ar_selection[row].obj.changetipe;

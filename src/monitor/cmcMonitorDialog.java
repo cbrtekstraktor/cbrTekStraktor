@@ -119,7 +119,7 @@ public class cmcMonitorDialog {
 	                   }
 	                   public void componentResized(ComponentEvent e)
 	                   {
-	                     //System.out.println("dialog resized");
+	                     perform_resize(dialog);
 	                   }
 	                   public void componentShown(ComponentEvent e)
 	                   {
@@ -129,7 +129,7 @@ public class cmcMonitorDialog {
 	  	            dialog.addWindowListener(new WindowAdapter() {
 	  	                @Override
 	  	                public void windowClosed(WindowEvent e) {
-	  	                    do_close();
+	  	                    do_close(dialog);
 	  	                }
 	  	            });
 	  	            //
@@ -312,7 +312,7 @@ public class cmcMonitorDialog {
 
 	  			    //
 	  	            dialog.setLocationByPlatform(true);
-	  	            dialog.setSize( 800 , 400 );
+	  	            dialog.setBounds( xMSet.monitframe );
 	   	            dialog.setVisible(true);
 	  	            //
 	  		}
@@ -320,11 +320,19 @@ public class cmcMonitorDialog {
 	  			do_error("Error openining Bulk Monitor Dialog" + xMSet.xU.LogStackTrace(e));
 	  		}
 	  	}
+  	
+	    //-----------------------------------------------------------------------
+	    private void perform_resize( JDialog diag)
+	    //-----------------------------------------------------------------------
+	    {
+		//do_log( 9 , "===>" + diag.getWidth() + " " + diag.getHeight() );
+	    }
 
 		//---------------------------------------------------------------------------------
-	  	private void do_close()
+	  	private void do_close(JDialog diag)
 		//---------------------------------------------------------------------------------
 	  	{
+	  		xMSet.setMonitorFrameBounds( diag.getX() , diag.getY() , diag.getWidth() , diag.getHeight() );
 	  	    hasBeenClosed=true;	
 	  	}
 	    //-----------------------------------------------------------------------
